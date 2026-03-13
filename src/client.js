@@ -53,6 +53,7 @@ class QQBotClient extends EventEmitter {
       intents: config.intents || Intent.GUILDS | Intent.GUILD_MESSAGES | Intent.GUILD_MEMBERS,
       shard: config.shard || [0, 1],
       getGateway: this.getGateway.bind(this),
+      http: this.http, // 传递HTTP客户端，用于获取token
     });
 
     // 创建API实例

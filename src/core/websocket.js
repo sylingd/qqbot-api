@@ -5,7 +5,7 @@
 
 import WebSocket from 'ws';
 import EventEmitter from 'events';
-import { OpCode, Intent, EventType } from '../types/index.js';
+import { OpCode, Intent, EventType  } from '../types/index.js';
 
 /**
  * WebSocket Gateway客户端
@@ -19,6 +19,7 @@ class WebSocketGateway extends EventEmitter {
    * @param {number} config.intents - 订阅的事件
    * @param {number} config.shard - 分片信息 [shard_id, shard_count]
    * @param {Function} config.getGateway - 获取Gateway地址的方法
+   * @param {Object} config.http - HTTP客户端（用于获取token）
    */
   constructor(config = {}) {
     super();
@@ -28,6 +29,7 @@ class WebSocketGateway extends EventEmitter {
     this.intents = config.intents || Intent.GUILDS | Intent.GUILD_MESSAGES | Intent.GUILD_MEMBERS;
     this.shard = config.shard || [0, 1];
     this.getGateway = config.getGateway;
+    this.http = config.http;
 
     this.ws = null;
     this.sessionId = null;
@@ -208,11 +210,30 @@ class WebSocketGateway extends EventEmitter {
   /**
    * 发送鉴权
    */
-  identify() {
+  async identify() {
+    // 获取token
+    let token = this.token;
+
+    // 如果没有token，从HTTP客户端获取
+    if (!token && this.http) {
+      try {
+        const tokenData = await this.http.getAccessToken();
+        token = tokenData.access_token;
+      } catch (error) {
+        this.emit('error', new Error('Failed to get access token: ' + error.message));
+        return;
+      }
+    }
+
+    if (!token) {
+      this.emit('error', new Error('No token available for authentication'));
+      return;
+    }
+
     const payload = {
       op: OpCode.IDENTIFY,
       d: {
-        token: `QQBot ${this.token}`,
+        token: `QQBot ${token}`,
         intents: this.intents,
         shard: this.shard,
         properties: {
@@ -229,11 +250,30 @@ class WebSocketGateway extends EventEmitter {
   /**
    * 恢复连接
    */
-  resume() {
+  async resume() {
+    // 获取token
+    let token = this.token;
+
+    // 如果没有token，从HTTP客户端获取
+    if (!token && this.http) {
+      try {
+        const tokenData = await this.http.getAccessToken();
+        token = tokenData.access_token;
+      } catch (error) {
+        this.emit('error', new Error('Failed to get access token: ' + error.message));
+        return;
+      }
+    }
+
+    if (!token) {
+      this.emit('error', new Error('No token available for resume'));
+      return;
+    }
+
     const payload = {
       op: OpCode.RESUME,
       d: {
-        token: `QQBot ${this.token}`,
+        token: `QQBot ${token}`,
         session_id: this.sessionId,
         seq: this.seq,
       },
