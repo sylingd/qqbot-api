@@ -3,22 +3,27 @@
   "version": "1.0.3",
   "description": "腾讯QQ Bot API Node.js SDK - 完整封装52个API端点，支持ES Module",
   "main": "index.js",
+  "types": "index.d.ts",
   "type": "module",
   "exports": {
     ".": {
       "import": "./index.js",
+      "types": "./index.d.ts",
       "default": "./index.js"
     },
     "./types": {
       "import": "./src/types/index.js",
+      "types": "./index.d.ts",
       "default": "./src/types/index.js"
     },
     "./core": {
       "import": "./src/core/index.js",
+      "types": "./index.d.ts",
       "default": "./src/core/index.js"
     },
     "./api": {
       "import": "./src/api/index.js",
+      "types": "./index.d.ts",
       "default": "./src/api/index.js"
     }
   },
@@ -33,13 +38,13 @@
     "api",
     "sdk",
     "qqbot-api",
-    "qqbot-plugin"
+    "typescript"
   ],
-  "author": "",
+  "author": "wfqyys",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/wfqyys/qqbot-api.git"
   },
   "bugs": {
     "url": ""
@@ -51,13 +56,15 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "@types/ws": "^8.5.0"
+    "@types/ws": "^8.5.0",
+    "typescript": "^5.0.0"
   },
   "engines": {
     "node": ">=14.0.0"
   },
   "files": [
     "index.js",
+    "index.d.ts",
     "src/**/*",
     "README.md",
     "LICENSE"

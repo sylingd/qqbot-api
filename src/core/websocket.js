@@ -5,7 +5,7 @@
 
 import WebSocket from 'ws';
 import EventEmitter from 'events';
-import { OpCode, Intent, EventType  } from '../types/index.js';
+import { OpCode, Intent, EventType } from '../types/index.js';
 
 /**
  * WebSocket Gateway客户端
@@ -18,6 +18,7 @@ class WebSocketGateway extends EventEmitter {
    * @param {string} config.token - 机器人Token
    * @param {number} config.intents - 订阅的事件
    * @param {number} config.shard - 分片信息 [shard_id, shard_count]
+   * @param {Function} config.getGateway - 获取Gateway地址的方法
    */
   constructor(config = {}) {
     super();
@@ -26,6 +27,7 @@ class WebSocketGateway extends EventEmitter {
     this.token = config.token;
     this.intents = config.intents || Intent.GUILDS | Intent.GUILD_MESSAGES | Intent.GUILD_MEMBERS;
     this.shard = config.shard || [0, 1];
+    this.getGateway = config.getGateway;
 
     this.ws = null;
     this.sessionId = null;

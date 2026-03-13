@@ -17,7 +17,7 @@ import UserAPI from './api/user.js';
 import ScheduleAPI from './api/schedule.js';
 import MessageAuditAPI from './api/messageAudit.js';
 import EventEmitter from 'events';
-import { Gateway, Intent  } from './types/index.js';
+import { Gateway, Intent } from './types/index.js';
 
 /**
  * QQ Bot客户端
@@ -52,6 +52,7 @@ class QQBotClient extends EventEmitter {
       token: config.token,
       intents: config.intents || Intent.GUILDS | Intent.GUILD_MESSAGES | Intent.GUILD_MEMBERS,
       shard: config.shard || [0, 1],
+      getGateway: this.getGateway.bind(this),
     });
 
     // 创建API实例
