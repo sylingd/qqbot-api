@@ -3,8 +3,6 @@
  * 用于获取和管理QQ Bot Token
  */
 
-import axios from 'axios';
-
 interface TokenResponse {
   access_token: string;
   expires_in: number;
@@ -44,25 +42,29 @@ class BotTokenManager {
     }
 
     try {
-      const response = await axios.post(
-        'https://bots.qq.com/app/getAppAccessToken',
-        {
+      const response = await fetch('https://bots.qq.com/app/getAppAccessToken', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           appId: this.appId,
           clientSecret: this.clientSecret,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+        }),
+      });
 
-      this.botToken = response.data.access_token;
-      this.botTokenExpireTime = Date.now() + (response.data.expires_in - 60) * 1000; // 提前60秒过期
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      this.botToken = data.access_token;
+      this.botTokenExpireTime = Date.now() + (data.expires_in - 60) * 1000; // 提前60秒过期
 
       return {
         access_token: this.botToken!,
-        expires_in: response.data.expires_in,
+        expires_in: data.expires_in,
       };
     } catch (error) {
       throw new Error(`Failed to get bot token: ${(error as Error).message}`);
