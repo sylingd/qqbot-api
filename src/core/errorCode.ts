@@ -10,6 +10,7 @@ export const ErrorCode = {
   // 通用错误码
   UNKNOWN: 0, // 未知错误
   SUCCESS: 1, // 成功
+  TIMEOUT: 2, // 请求超时
 
   // 参数错误
   PARAM_ERROR: 1001, // 参数错误
@@ -53,7 +54,7 @@ export const ErrorCode = {
 
 // 获取ErrorCode的所有键值对类型
 export type ErrorCodeKey = keyof typeof ErrorCode;
-export type ErrorCodeValue = typeof ErrorCode[keyof typeof ErrorCode];
+export type ErrorCodeValue = (typeof ErrorCode)[keyof typeof ErrorCode];
 
 /**
  * 错误码描述
@@ -61,6 +62,7 @@ export type ErrorCodeValue = typeof ErrorCode[keyof typeof ErrorCode];
 export const ErrorMessages: Record<ErrorCodeValue, string> = {
   [ErrorCode.UNKNOWN]: '未知错误',
   [ErrorCode.SUCCESS]: '成功',
+  [ErrorCode.TIMEOUT]: '请求超时',
   [ErrorCode.PARAM_ERROR]: '参数错误',
   [ErrorCode.PARAM_MISSING]: '参数缺失',
   [ErrorCode.PARAM_TYPE_ERROR]: '参数类型错误',
@@ -99,7 +101,11 @@ export class QQBotError extends Error {
   public readonly data: IErrorData | null;
   public readonly timestamp: number;
 
-  constructor(code: ErrorCodeValue, message?: string, data: IErrorData | null = null) {
+  constructor(
+    code: ErrorCodeValue,
+    message?: string,
+    data: IErrorData | null = null,
+  ) {
     super(message || ErrorMessages[code] || '未知错误');
     this.name = 'QQBotError';
     this.code = code;
@@ -122,7 +128,13 @@ export class QQBotError extends Error {
    * 转换为JSON
    * @returns {Object} JSON对象
    */
-  toJSON(): { name: string; code: number; message: string; data: IErrorData | null; timestamp: number } {
+  toJSON(): {
+    name: string;
+    code: number;
+    message: string;
+    data: IErrorData | null;
+    timestamp: number;
+  } {
     return {
       name: this.name,
       code: this.code,
@@ -201,7 +213,11 @@ export class QQBotError extends Error {
  * @param {Object} data - 错误数据
  * @returns {QQBotError} 错误对象
  */
-export function createError(code: ErrorCodeValue, message?: string, data: IErrorData | null = null): QQBotError {
+export function createError(
+  code: ErrorCodeValue,
+  message?: string,
+  data: IErrorData | null = null,
+): QQBotError {
   return new QQBotError(code, message, data);
 }
 
@@ -210,16 +226,13 @@ export function createError(code: ErrorCodeValue, message?: string, data: IError
  * @param {Object} response - API响应
  * @returns {QQBotError} 错误对象
  */
-export function createErrorFromResponse(response: { code?: number; message?: string; [key: string]: any }): QQBotError {
+export function createErrorFromResponse(response: {
+  code?: number;
+  message?: string;
+  [key: string]: any;
+}): QQBotError {
   const code = response.code !== undefined ? response.code : ErrorCode.UNKNOWN;
-  const message = response.message || ErrorMessages[code as ErrorCodeValue] || '未知错误';
+  const message =
+    response.message || ErrorMessages[code as ErrorCodeValue] || '未知错误';
   return new QQBotError(code as ErrorCodeValue, message, response);
 }
-
-export default {
-  ErrorCode,
-  ErrorMessages,
-  QQBotError,
-  createError,
-  createErrorFromResponse,
-};

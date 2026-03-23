@@ -1,6 +1,6 @@
 {
   "name": "@sylingd/qqbot-api",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "腾讯QQ Bot API Node.js SDK - 完整封装52个API端点，支持ES Module",
   "types": "./dist/index.d.ts",
   "main": "./dist/index.js",
@@ -54,5 +54,9 @@
     "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
       "biome check --write --files-ignore-unknown=true"
     ]
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
   }
 }

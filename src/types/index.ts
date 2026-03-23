@@ -362,6 +362,15 @@ export interface DMS {
   create_time: string; // 创建时间
 }
 
+export enum InnerEventType {
+  DISPATCH = 'DISPATCH', // 分发事件
+  CONNECTED = 'CONNECTED', // 连接成功
+  RECONNECTING = 'RECONNECTING', // 正在重连
+  CLOSE = 'CLOSE', // 连接关闭
+  DEBUG = 'DEBUG', // 调试信息
+  HEARTBEAT_ACK = 'HEARTBEAT_ACK', // 心跳确认
+}
+
 /**
  * WebSocket事件类型
  */

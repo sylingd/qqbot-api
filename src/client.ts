@@ -28,7 +28,7 @@ import {
   type Message,
 } from './types/index';
 
-interface QQBotConfig {
+export interface QQBotConfig {
   appId: string;
   token: string;
   secret?: string;
@@ -36,7 +36,7 @@ interface QQBotConfig {
   timeout?: number;
 }
 
-interface EventMap {
+export interface EventMap {
   [EventType.READY]: (data: any) => void;
   [EventType.GUILD_CREATE]: (data: any) => void;
   [EventType.GUILD_UPDATE]: (data: any) => void;
@@ -76,9 +76,6 @@ interface EventMap {
   [EventType.AT_MESSAGE_CREATE]: (data: Message) => void;
   [EventType.GROUP_AT_MESSAGE_CREATE]: (data: GroupAtMessage) => void;
   [EventType.C2C_MESSAGE_CREATE]: (data: C2CMessage) => void;
-  connect: () => void;
-  disconnect: (code?: number, reason?: string) => void;
-  error: (error: any) => void;
 }
 
 class QQBotClient {

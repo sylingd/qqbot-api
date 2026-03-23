@@ -4,6 +4,7 @@
  */
 
 import type BotTokenManager from './botToken';
+import { createError, createErrorFromResponse, ErrorCode } from './errorCode';
 
 // 简单封装的 fetch 函数，添加默认配置、超时处理和错误处理
 async function fetchWrapper(
@@ -23,24 +24,11 @@ async function fetchWrapper(
 
     clearTimeout(timeoutId);
 
-    if (!response.ok) {
-      throw new Error(
-        `HTTP error! status: ${response.status}, message: ${response.statusText}`,
-      );
-    }
-
-    return response.json();
+    return response;
   } catch (error) {
     clearTimeout(timeoutId);
 
-    if (error instanceof Error) {
-      if (error.name === 'AbortError') {
-        throw new Error('Request timeout');
-      }
-      throw error;
-    }
-
-    throw new Error('Unknown error occurred during fetch');
+    throw error;
   }
 }
 
@@ -110,7 +98,7 @@ class QQBotHttpClient {
     const options: RequestInit = {
       method,
       headers: {
-        Authorization: token,
+        Authorization: `QQBot ${token}`,
         'Content-Type': 'application/json',
       },
     };
@@ -122,7 +110,25 @@ class QQBotHttpClient {
     }
 
     // 使用封装的 fetch 发送请求
-    return fetchWrapper(fullUrl, options, this.timeout);
+    try {
+      const res = await fetchWrapper(fullUrl, options, this.timeout);
+      const json = await res.json();
+      if (res.status >= 400) {
+        throw createErrorFromResponse(json);
+      }
+      return json;
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw createError(ErrorCode.TIMEOUT);
+        }
+        throw createError(ErrorCode.UNKNOWN, error.message);
+      }
+      throw createError(
+        ErrorCode.UNKNOWN,
+        'Unknown error occurred during request',
+      );
+    }
   }
 
   /**

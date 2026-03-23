@@ -5,7 +5,7 @@
 
 import EventEmitter from 'node:events';
 import WebSocket from 'ws';
-import { EventType, Intent, OpCode } from '../types/index';
+import { EventType, InnerEventType, Intent, OpCode } from '../types/index';
 
 interface WebSocketConfig {
   appId: string;
@@ -83,7 +83,7 @@ class WebSocketGateway extends EventEmitter {
         this.ws = new WebSocket(gatewayUrl);
 
         this.ws!.on('open', () => {
-          this.emit('connected');
+          this.emit(InnerEventType.CONNECTED);
         });
 
         this.ws!.on('message', data => {
@@ -95,12 +95,12 @@ class WebSocketGateway extends EventEmitter {
         });
 
         this.ws!.on('error', (error: Error) => {
-          this.emit('error', error);
+          this.emit(EventType.ERROR, error);
           reject(error);
         });
 
         // 等待READY事件
-        this.once('ready', () => {
+        this.once(EventType.READY, () => {
           resolve();
         });
       } catch (error) {
@@ -145,10 +145,10 @@ class WebSocketGateway extends EventEmitter {
           break;
 
         default:
-          this.emit('debug', `Unknown OpCode: ${payload.op}`);
+          this.emit(InnerEventType.DEBUG, `Unknown OpCode: ${payload.op}`);
       }
     } catch (error) {
-      this.emit('error', error);
+      this.emit(EventType.ERROR, error);
     }
   }
 
@@ -178,15 +178,11 @@ class WebSocketGateway extends EventEmitter {
     // 保存session_id
     if (eventType === EventType.READY) {
       this.sessionId = eventData.session_id;
-      this.emit('ready', eventData);
+      this.emit(EventType.READY, eventData);
     } else if (eventType === EventType.RESUMED) {
-      this.emit('ready', eventData);
-    } else {
-      // 触发对应事件
-      if (eventType) {
-        this.emit(eventType, eventData);
-      }
-      this.emit('dispatch', eventType, eventData);
+      this.emit(EventType.RESUMED, eventData);
+    } else if (eventType) {
+      this.emit(eventType, eventData);
     }
   }
 
@@ -194,14 +190,14 @@ class WebSocketGateway extends EventEmitter {
    * 处理心跳回执
    */
   handleHeartbeatAck(): void {
-    this.emit('debug', 'Heartbeat ACK received');
+    this.emit(InnerEventType.DEBUG, 'Heartbeat ACK received');
   }
 
   /**
    * 处理重连
    */
   handleReconnect(): void {
-    this.emit('reconnect');
+    this.emit(InnerEventType.RECONNECTING);
     this.reconnect();
   }
 
@@ -228,7 +224,7 @@ class WebSocketGateway extends EventEmitter {
   handleClose(code: number, reason: Buffer): void {
     this.stopHeartbeat();
 
-    this.emit('close', code, reason.toString());
+    this.emit(InnerEventType.CLOSE, code, reason.toString());
 
     // 自动重连
     if (!this.isReconnecting) {
@@ -250,7 +246,7 @@ class WebSocketGateway extends EventEmitter {
         token = tokenData.access_token;
       } catch (error) {
         this.emit(
-          'error',
+          EventType.ERROR,
           new Error(`Failed to get access token: ${(error as Error).message}`),
         );
         return;
@@ -258,7 +254,10 @@ class WebSocketGateway extends EventEmitter {
     }
 
     if (!token) {
-      this.emit('error', new Error('No token available for authentication'));
+      this.emit(
+        EventType.ERROR,
+        new Error('No token available for authentication'),
+      );
       return;
     }
 
@@ -293,7 +292,7 @@ class WebSocketGateway extends EventEmitter {
         token = tokenData.access_token;
       } catch (error) {
         this.emit(
-          'error',
+          EventType.ERROR,
           new Error(`Failed to get access token: ${(error as Error).message}`),
         );
         return;
@@ -301,7 +300,7 @@ class WebSocketGateway extends EventEmitter {
     }
 
     if (!token) {
-      this.emit('error', new Error('No token available for resume'));
+      this.emit(EventType.ERROR, new Error('No token available for resume'));
       return;
     }
 
@@ -369,7 +368,7 @@ class WebSocketGateway extends EventEmitter {
     // 延迟重连
     this.reconnectTimeout = setTimeout(async () => {
       try {
-        this.emit('reconnecting');
+        this.emit(InnerEventType.RECONNECTING);
 
         // 获取新的gateway地址
         const gatewayUrl = this.getGateway ? await this.getGateway() : this.url;
@@ -377,7 +376,7 @@ class WebSocketGateway extends EventEmitter {
 
         this.isReconnecting = false;
       } catch (error) {
-        this.emit('error', error);
+        this.emit(EventType.ERROR, error);
         this.isReconnecting = false;
 
         // 继续重连

@@ -2,7 +2,7 @@
 
 基于腾讯官方文档的 Node.js QQ Bot API SDK（ES Module版本）。
 
-[![npm version](https://badge.fury.io/js/qqbot-api.svg)](https://badge.fury.io/js/qqbot-api)
+[![NPM Version](https://img.shields.io/npm/v/%40sylingd%2Fqqbot-api)](https://www.npmjs.com/package/@sylingd/qqbot-api)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 特性
@@ -26,34 +26,6 @@
 npm install qqbot-api
 ```
 
-## 导入方式
-
-### 方式1: 默认导入（推荐）
-
-```javascript
-import QQBot, { Intent, ErrorCode, QQBotError } from 'qqbot-api';
-```
-
-### 方式2: 命名导入
-
-```javascript
-import { default as QQBot, Intent, ErrorCode, QQBotError } from 'qqbot-api';
-```
-
-### 方式3: 导入类型定义
-
-```javascript
-import * as types from 'qqbot-api/types';
-// 或
-import { Guild, Channel, Message } from 'qqbot-api';
-```
-
-### 方式4: 导入核心模块
-
-```javascript
-import { QQBotHttpClient, WebSocketGateway, BotTokenManager } from 'qqbot-api/core';
-```
-
 ## 快速开始
 
 ### 1. 创建Bot实例
@@ -61,7 +33,7 @@ import { QQBotHttpClient, WebSocketGateway, BotTokenManager } from 'qqbot-api/co
 #### 方式1: 使用clientSecret自动获取Token（推荐）
 
 ```javascript
-import QQBot, { Intent } from 'qqbot-api';
+import QQBot, { Intent } from '@sylingd/qqbot-api';
 
 const bot = new QQBot({
   appId: 'your-app-id',
@@ -74,7 +46,7 @@ const bot = new QQBot({
 #### 方式2: 使用Bot Token
 
 ```javascript
-import QQBot, { Intent } from 'qqbot-api';
+import QQBot, { Intent } from '@sylingd/qqbot-api';
 
 const bot = new QQBot({
   appId: 'your-app-id',
@@ -95,7 +67,7 @@ bot.on('ready', (data) => {
 // 收到消息
 bot.on('MESSAGE_CREATE', async (message) => {
   console.log('收到消息:', message);
-  
+
   // 回复消息
   if (message.content === 'ping') {
     await bot.message.sendTextMessage(message.channel_id, 'pong!');
@@ -498,7 +470,7 @@ try {
   if (error instanceof QQBotError) {
     console.log('错误码:', error.code);
     console.log('错误消息:', error.message);
-    
+
     // 错误类型判断
     if (error.isTokenError()) {
       console.log('Token错误，请检查Token配置');
@@ -509,7 +481,7 @@ try {
     } else if (error.isRateLimitError()) {
       console.log('请求频率超限');
     }
-    
+
     // 获取错误详情
     console.log('错误描述:', error.getDescription());
     console.log('错误JSON:', error.toJSON());
