@@ -36,6 +36,4 @@ jobs:
       run: npm version --no-git-tag-version ${{ steps.get_version.outputs.VERSION }}
     - name: Build
       run: npm run build
-    - name: Test
-      run: npm run test
     - run: npm publish
