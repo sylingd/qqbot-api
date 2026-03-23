@@ -224,7 +224,7 @@ class WebSocketGateway extends EventEmitter {
   handleClose(code: number, reason: Buffer): void {
     this.stopHeartbeat();
 
-    this.emit(InnerEventType.CLOSE, code, reason.toString());
+    this.emit(EventType.CLOSE, code, reason.toString());
 
     // 自动重连
     if (!this.isReconnecting) {

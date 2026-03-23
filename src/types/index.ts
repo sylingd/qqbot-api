@@ -367,7 +367,6 @@ export enum InnerEventType {
   CONNECTED = 'CONNECTED', // 连接成功
   RECONNECT = 'RECONNECT', // 即将重连
   RECONNECTING = 'RECONNECTING', // 正在重连
-  CLOSE = 'CLOSE', // 连接关闭
   DEBUG = 'DEBUG', // 调试信息
   HEARTBEAT_ACK = 'HEARTBEAT_ACK', // 心跳确认
 }
@@ -379,6 +378,7 @@ export enum EventType {
   READY = 'READY', // 连接成功
   ERROR = 'ERROR', // 错误
   RESUMED = 'RESUMED', // 重连成功
+  CLOSE = 'CLOSE', // 连接关闭
   GUILD_CREATE = 'GUILD_CREATE', // 频道创建
   GUILD_UPDATE = 'GUILD_UPDATE', // 频道更新
   GUILD_DELETE = 'GUILD_DELETE', // 频道删除

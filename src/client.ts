@@ -41,6 +41,8 @@ export interface QQBotConfig {
 
 export interface EventMap {
   [EventType.READY]: (data: any) => void;
+  [EventType.ERROR]: (error: Error) => void;
+  [EventType.CLOSE]: (code: number, reason: string) => void;
   [EventType.GUILD_CREATE]: (data: any) => void;
   [EventType.GUILD_UPDATE]: (data: any) => void;
   [EventType.GUILD_DELETE]: (data: any) => void;
