@@ -3,16 +3,16 @@
  * 基于腾讯官方文档：https://bot.q.qq.com/wiki/develop/api-v2/dev-protocol/
  */
 
+import EventEmitter from 'node:events';
 import WebSocket from 'ws';
-import EventEmitter from 'events';
-import { OpCode, Intent, EventType } from '../types/index';
+import { EventType, Intent, OpCode } from '../types/index';
 
 interface WebSocketConfig {
   appId: string;
   token: string;
   intents?: number;
   shard?: number[];
-  url: string;  // 修改：添加url属性
+  url: string; // 修改：添加url属性
   getGateway?: () => Promise<string>;
   http?: any;
 }
@@ -32,7 +32,7 @@ class WebSocketGateway extends EventEmitter {
   private token: string;
   private intents: number;
   private shard: number[];
-  private url: string;  // 新增：存储网关URL
+  private url: string; // 新增：存储网关URL
   private getGateway?: () => Promise<string>;
   private http?: any;
   private ws: WebSocket | null = null;
@@ -40,7 +40,6 @@ class WebSocketGateway extends EventEmitter {
   private seq: number = 0;
   private heartbeatInterval: NodeJS.Timeout | null = null;
   private reconnectTimeout: NodeJS.Timeout | null = null;
-  private isConnected: boolean = false;
   private isReconnecting: boolean = false;
 
   /**
@@ -59,9 +58,11 @@ class WebSocketGateway extends EventEmitter {
 
     this.appId = config.appId;
     this.token = config.token;
-    this.intents = config.intents || Intent.GUILDS | Intent.GUILD_MESSAGES | Intent.GUILD_MEMBERS;
+    this.intents =
+      config.intents ||
+      Intent.GUILDS | Intent.GUILD_MESSAGES | Intent.GUILD_MEMBERS;
     this.shard = config.shard || [0, 1];
-    this.url = config.url;  // 新增：存储网关URL
+    this.url = config.url; // 新增：存储网关URL
     this.getGateway = config.getGateway;
     this.http = config.http;
   }
@@ -71,8 +72,8 @@ class WebSocketGateway extends EventEmitter {
    * @param {string} url - WebSocket URL
    */
   async connect(url?: string): Promise<void> {
-    const gatewayUrl = url || this.url;  // 使用传入的URL或配置中的URL
-    
+    const gatewayUrl = url || this.url; // 使用传入的URL或配置中的URL
+
     if (this.ws) {
       this.ws.close();
     }
@@ -86,7 +87,7 @@ class WebSocketGateway extends EventEmitter {
           this.emit('connected');
         });
 
-        this.ws!.on('message', (data) => {
+        this.ws!.on('message', data => {
           this.handleMessage(data);
         });
 
@@ -103,7 +104,6 @@ class WebSocketGateway extends EventEmitter {
         this.once('ready', () => {
           resolve();
         });
-
       } catch (error) {
         reject(error);
       }
@@ -148,7 +148,6 @@ class WebSocketGateway extends EventEmitter {
         default:
           this.emit('debug', `Unknown OpCode: ${payload.op}`);
       }
-
     } catch (error) {
       this.emit('error', error);
     }
@@ -180,6 +179,8 @@ class WebSocketGateway extends EventEmitter {
     // 保存session_id
     if (eventType === EventType.READY) {
       this.sessionId = eventData.session_id;
+      this.emit('ready', eventData);
+    } else if (eventType === EventType.RESUMED) {
       this.emit('ready', eventData);
     } else {
       // 触发对应事件
@@ -250,7 +251,10 @@ class WebSocketGateway extends EventEmitter {
         const tokenData = await this.http.getAccessToken();
         token = tokenData.access_token;
       } catch (error) {
-        this.emit('error', new Error('Failed to get access token: ' + (error as Error).message));
+        this.emit(
+          'error',
+          new Error(`Failed to get access token: ${(error as Error).message}`),
+        );
         return;
       }
     }
@@ -290,7 +294,10 @@ class WebSocketGateway extends EventEmitter {
         const tokenData = await this.http.getAccessToken();
         token = tokenData.access_token;
       } catch (error) {
-        this.emit('error', new Error('Failed to get access token: ' + (error as Error).message));
+        this.emit(
+          'error',
+          new Error(`Failed to get access token: ${(error as Error).message}`),
+        );
         return;
       }
     }

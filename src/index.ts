@@ -22,18 +22,10 @@
  */
 
 import QQBotClient from './client';
-import * as types from './types/index';
-import * as errorCode from './core/errorCode';
 
+export { ErrorCode, QQBotError } from './core/errorCode';
 // 导出主类
 export default QQBotClient;
 
 // 导出所有类型
 export * from './types/index';
-export * from './api';
-
-// 导出类型对象
-export { types };
-
-// 导出错误码模块
-export * from './core/errorCode';
