@@ -1,18 +1,19 @@
 export default {
   lib: [
     {
-      format: "esm",
-      syntax: "es2021",
+      format: 'esm',
+      syntax: 'es2021',
       dts: true,
+      autoExtension: true,
     },
   ],
   bundle: false,
-  outBase: "./src",
+  outBase: './src',
   output: {
-    target: "node",
+    target: 'node',
     sourceMap: false,
     distPath: {
-      root: "./dist",
+      root: './dist',
     },
   },
 };

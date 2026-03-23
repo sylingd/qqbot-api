@@ -3,21 +3,27 @@
  * 基于腾讯官方文档：https://bot.q.qq.com/wiki/develop/api-v2/
  */
 
-import QQBotHttpClient from './core/httpClient';
-import BotToken from './core/botToken';
-import WebSocketClient from './core/websocket';
-import GuildAPI from './api/guild';
-import ChannelAPI from './api/channel';
-import MemberAPI from './api/member';
-import MessageAPI from './api/message';
-import MessageAuditAPI from './api/messageAudit';
-import UserAPI from './api/user';
-import ReactionAPI from './api/reaction';
-import PermissionAPI from './api/permission';
 import AudioAPI from './api/audio';
+import ChannelAPI from './api/channel';
+import ChannelMessageAPI from './api/channelMessage';
 import ForumAPI from './api/forum';
+import GuildAPI from './api/guild';
+import MemberAPI from './api/member';
+import MessageAuditAPI from './api/messageAudit';
+import PermissionAPI from './api/permission';
+import ReactionAPI from './api/reaction';
 import ScheduleAPI from './api/schedule';
-import { EventType, Gateway } from './types/index';
+import UserAPI from './api/user';
+import BotToken from './core/botToken';
+import QQBotHttpClient from './core/httpClient';
+import WebSocketClient from './core/websocket';
+import {
+  type C2CMessage,
+  EventType,
+  type Gateway,
+  type GroupAtMessage,
+  type Message,
+} from './types/index';
 
 interface QQBotConfig {
   appId: string;
@@ -27,7 +33,7 @@ interface QQBotConfig {
 }
 
 interface EventMap {
-  [EventType.READY]: () => void;
+  [EventType.READY]: (data: any) => void;
   [EventType.GUILD_CREATE]: (data: any) => void;
   [EventType.GUILD_UPDATE]: (data: any) => void;
   [EventType.GUILD_DELETE]: (data: any) => void;
@@ -37,11 +43,11 @@ interface EventMap {
   [EventType.GUILD_MEMBER_ADD]: (data: any) => void;
   [EventType.GUILD_MEMBER_UPDATE]: (data: any) => void;
   [EventType.GUILD_MEMBER_REMOVE]: (data: any) => void;
-  [EventType.MESSAGE_CREATE]: (data: any) => void;
+  [EventType.MESSAGE_CREATE]: (data: Message) => void;
   [EventType.MESSAGE_DELETE]: (data: any) => void;
   [EventType.MESSAGE_REACTION_ADD]: (data: any) => void;
   [EventType.MESSAGE_REACTION_REMOVE]: (data: any) => void;
-  [EventType.DIRECT_MESSAGE_CREATE]: (data: any) => void;
+  [EventType.DIRECT_MESSAGE_CREATE]: (data: Message) => void;
   [EventType.THREAD_CREATE]: (data: any) => void;
   [EventType.THREAD_UPDATE]: (data: any) => void;
   [EventType.THREAD_DELETE]: (data: any) => void;
@@ -63,7 +69,9 @@ interface EventMap {
   [EventType.FORUM_REPLY_CREATE]: (data: any) => void;
   [EventType.FORUM_REPLY_DELETE]: (data: any) => void;
   [EventType.INTERACTION_COMMAND]: (data: any) => void;
-  [EventType.GUILD_MESSAGE_REACTIONS]: (data: any) => void;
+  [EventType.AT_MESSAGE_CREATE]: (data: Message) => void;
+  [EventType.GROUP_AT_MESSAGE_CREATE]: (data: GroupAtMessage) => void;
+  [EventType.C2C_MESSAGE_CREATE]: (data: C2CMessage) => void;
   connect: () => void;
   disconnect: (code?: number, reason?: string) => void;
   error: (error: any) => void;
@@ -79,7 +87,7 @@ class QQBotClient {
   public guild: GuildAPI;
   public channel: ChannelAPI;
   public member: MemberAPI;
-  public message: MessageAPI;
+  public channelMessage: ChannelMessageAPI;
   public messageAudit: MessageAuditAPI;
   public user: UserAPI;
   public reaction: ReactionAPI;
@@ -99,7 +107,7 @@ class QQBotClient {
     this.guild = new GuildAPI(this.http);
     this.channel = new ChannelAPI(this.http);
     this.member = new MemberAPI(this.http);
-    this.message = new MessageAPI(this.http);
+    this.channelMessage = new ChannelMessageAPI(this.http);
     this.messageAudit = new MessageAuditAPI(this.http);
     this.user = new UserAPI(this.http);
     this.reaction = new ReactionAPI(this.http);
@@ -116,10 +124,12 @@ class QQBotClient {
    */
   on<T extends keyof EventMap>(event: T, listener: EventMap[T]): void {
     if (!this.ws) {
-      console.warn('WebSocket not initialized yet. Please call bot.start() first.');
+      console.warn(
+        'WebSocket not initialized yet. Please call bot.start() first.',
+      );
       return;
     }
-    this.ws.on(event as string | symbol, listener);
+    this.ws.on(event as string, listener);
   }
 
   /**
@@ -131,7 +141,7 @@ class QQBotClient {
     if (!this.ws) {
       return;
     }
-    this.ws.off(event as string | symbol, listener);
+    this.ws.off(event as string, listener);
   }
 
   /**
@@ -141,13 +151,13 @@ class QQBotClient {
   async start(intents = 0): Promise<void> {
     // Get gateway info
     const gatewayInfo = await this.getGatewayBot();
-    
+
     // Initialize WebSocket
     this.ws = new WebSocketClient({
       token: await this.tokenManager.getToken(),
-      url: gatewayInfo.url || '',  // 修复类型问题，如果url是undefined则设为''
+      url: gatewayInfo.url || '',
       intents,
-      appId: this.config.appId,  // 修复属性名
+      appId: this.config.appId,
     });
 
     // Start connection

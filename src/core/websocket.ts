@@ -83,7 +83,6 @@ class WebSocketGateway extends EventEmitter {
         this.ws = new WebSocket(gatewayUrl);
 
         this.ws!.on('open', () => {
-          this.isConnected = true;
           this.emit('connected');
         });
 
@@ -227,7 +226,6 @@ class WebSocketGateway extends EventEmitter {
    * @param {Buffer} reason - 关闭原因
    */
   handleClose(code: number, reason: Buffer): void {
-    this.isConnected = false;
     this.stopHeartbeat();
 
     this.emit('close', code, reason.toString());
@@ -413,7 +411,6 @@ class WebSocketGateway extends EventEmitter {
       this.ws = null;
     }
 
-    this.isConnected = false;
     this.sessionId = null;
   }
 }

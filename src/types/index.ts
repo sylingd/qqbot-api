@@ -8,41 +8,41 @@
 /**
  * 频道对象
  */
-interface Guild {
-  id?: string; // 频道ID
-  name?: string; // 频道名称
-  icon?: string; // 频道头像地址
-  owner_id?: string; // 创建人用户ID
-  owner?: User; // 创建人
-  member_count?: number; // 成员数
-  max_members?: number; // 最大成员数
-  description?: string; // 描述
-  joined_at?: string; // 加入时间
+export interface Guild {
+  id: string; // 频道ID
+  name: string; // 频道名称
+  icon: string; // 频道头像地址
+  owner_id: string; // 创建人用户ID
+  owner: User; // 创建人
+  member_count: number; // 成员数
+  max_members: number; // 最大成员数
+  description: string; // 描述
+  joined_at: string; // 加入时间
 }
 
 /**
  * 子频道对象
  */
-interface Channel {
-  id?: string; // 子频道ID
-  guild_id?: string; // 频道ID
-  name?: string; // 子频道名称
-  type?: number; // 子频道类型
-  sub_type?: number; // 子频道子类型
-  position?: number; // 排序
-  parent_id?: string; // 父频道ID
-  owner_id?: string; // 创建人ID
-  private_type?: number; // 私密类型
-  private_user_limit?: number; // 私密用户限制
-  speak_permission?: number; // 发言权限
-  application_id?: string; // 应用ID
-  permissions?: string; // 权限
+export interface Channel {
+  id: string; // 子频道ID
+  guild_id: string; // 频道ID
+  name: string; // 子频道名称
+  type: number; // 子频道类型
+  sub_type: number; // 子频道子类型
+  position: number; // 排序
+  parent_id: string; // 父频道ID
+  owner_id: string; // 创建人ID
+  private_type: number; // 私密类型
+  private_user_limit: number; // 私密用户限制
+  speak_permission: number; // 发言权限
+  application_id: string; // 应用ID
+  permissions: string; // 权限
 }
 
 /**
  * 子频道类型
  */
-enum ChannelType {
+export enum ChannelType {
   TEXT = 0, // 文字子频道
   VOICE = 2, // 语音子频道
   CATEGORY = 4, // 子频道分组
@@ -54,7 +54,7 @@ enum ChannelType {
 /**
  * 子频道子类型
  */
-enum ChannelSubType {
+export enum ChannelSubType {
   CONVERSATION = 0, // 闲聊
   ANNOUNCEMENT = 1, // 公告
   STRATEGY = 2, // 攻略
@@ -64,130 +64,152 @@ enum ChannelSubType {
 /**
  * 成员对象
  */
-interface Member {
-  user?: User; // 用户对象
-  nick?: string; // 昵称
-  roles?: string[]; // 角色ID列表
-  joined_at?: string; // 加入时间
+export interface Member {
+  user: User; // 用户对象
+  nick: string; // 昵称
+  roles: string[]; // 角色ID列表
+  joined_at: string; // 加入时间
 }
 
 /**
  * 用户对象
  */
-interface User {
-  id?: string; // 用户ID
-  username?: string; // 用户名
-  avatar?: string; // 头像
-  bot?: boolean; // 是否是机器人
-  union_openid?: string; // 特殊关联的openid
-  union_user_account?: string; // 特殊关联的用户信息
+export interface User {
+  id: string; // 用户ID
+  username: string; // 用户名
+  avatar: string; // 头像
+  bot: boolean; // 是否是机器人
+  union_openid: string; // 特殊关联的openid
+  union_user_account: string; // 特殊关联的用户信息
+  user_openid: string; // Message 事件中特有的用户ID
 }
 
 /**
  * 消息对象
  */
-interface Message {
-  id?: string; // 消息ID
-  channel_id?: string; // 子频道ID
-  guild_id?: string; // 频道ID
-  content?: string; // 消息内容
-  timestamp?: string; // 发送时间
-  edited_timestamp?: string; // 编辑时间
-  mention?: User[]; // @用户列表
-  mention_roles?: string[]; // @角色列表
-  mention_everyone?: boolean; // 是否@所有人
-  author?: User; // 作者
-  attachments?: Attachment[]; // 附件
-  embeds?: Embed[]; // embed
-  ark?: Ark; // ark消息
-  message_reference?: MessageReference; // 引用消息
-  seq?: number; // 序号
-  seq_in_channel?: string; // 子频道内序号
+export interface Message {
+  id: string; // 消息ID
+  channel_id: string; // 子频道ID
+  guild_id: string; // 频道ID
+  content: string; // 消息内容
+  timestamp: string; // 发送时间
+  edited_timestamp: string; // 编辑时间
+  mention: User[]; // @用户列表
+  mention_roles: string[]; // @角色列表
+  mention_everyone: boolean; // 是否@所有人
+  author: User; // 作者
+  attachments: Attachment[]; // 附件
+  embeds: Embed[]; // embed
+  ark: Ark; // ark消息
+  message_reference: MessageReference; // 引用消息
+  seq: number; // 序号
+  seq_in_channel: string; // 子频道内序号
+}
+
+export interface GroupAtMessage {
+  id: string;
+  author: {
+    member_openid: string;
+  };
+  content: string;
+  timestamp: string;
+  group_openid: string;
+  attachments: Attachment[];
+}
+
+export interface C2CMessage {
+  id: string;
+  author: {
+    user_openid: string;
+  };
+  content: string;
+  timestamp: string;
+  attachments: Attachment[];
 }
 
 /**
  * 消息引用对象
  */
-interface MessageReference {
-  message_id?: string; // 引用消息ID
-  channel_id?: string; // 引用消息所在子频道ID
-  guild_id?: string; // 引用消息所在频道ID
+export interface MessageReference {
+  message_id: string; // 引用消息ID
+  channel_id: string; // 引用消息所在子频道ID
+  guild_id: string; // 引用消息所在频道ID
 }
 
 /**
  * 附件对象
  */
-interface Attachment {
-  url?: string; // 下载地址
+export interface Attachment {
+  url: string; // 下载地址
 }
 
 /**
  * Embed对象
  */
-interface Embed {
-  title?: string; // 标题
-  description?: string; // 描述
-  prompt?: string; // 消息弹窗内容
-  timestamp?: string; // 时间
-  fields?: EmbedField[]; // 字段列表
-  color?: number; // 颜色
+export interface Embed {
+  title: string; // 标题
+  description: string; // 描述
+  prompt: string; // 消息弹窗内容
+  timestamp: string; // 时间
+  fields: EmbedField[]; // 字段列表
+  color: number; // 颜色
 }
 
 /**
  * Embed字段对象
  */
-interface EmbedField {
-  name?: string; // 字段名
-  value?: string; // 字段值
+export interface EmbedField {
+  name: string; // 字段名
+  value: string; // 字段值
 }
 
 /**
  * Ark消息对象
  */
-interface Ark {
-  template_id?: number; // 模版ID
-  kv?: ArkKv[]; // kv列表
+export interface Ark {
+  template_id: number; // 模版ID
+  kv: ArkKv[]; // kv列表
 }
 
 /**
  * Ark KV对象
  */
-interface ArkKv {
-  key?: string; // key
-  value?: string; // value
-  obj?: ArkKvObj[]; // obj列表
+export interface ArkKv {
+  key: string; // key
+  value: string; // value
+  obj: ArkKvObj[]; // obj列表
 }
 
 /**
  * Ark KV Obj对象
  */
-interface ArkKvObj {
-  obj_kv?: ArkKvObj[]; // obj_kv列表
+export interface ArkKvObj {
+  obj_kv: ArkKvObj[]; // obj_kv列表
 }
 
 /**
  * 消息反应对象
  */
-interface Reaction {
-  user_id?: string; // 用户ID
-  guild_id?: string; // 频道ID
-  channel_id?: string; // 子频道ID
-  message_id?: string; // 消息ID
-  emoji?: Emoji; // 表情
+export interface Reaction {
+  user_id: string; // 用户ID
+  guild_id: string; // 频道ID
+  channel_id: string; // 子频道ID
+  message_id: string; // 消息ID
+  emoji: Emoji; // 表情
 }
 
 /**
  * 表情对象
  */
-interface Emoji {
-  id?: string; // 表情ID
-  type?: number; // 表情类型
+export interface Emoji {
+  id: string; // 表情ID
+  type: number; // 表情类型
 }
 
 /**
  * 表情类型
  */
-enum EmojiType {
+export enum EmojiType {
   SYSTEM = 1, // 系统表情
   CUSTOM = 2, // 自定义表情
 }
@@ -195,48 +217,48 @@ enum EmojiType {
 /**
  * 角色对象
  */
-interface Role {
-  id?: string; // 角色ID
-  name?: string; // 角色名称
-  color?: number; // ARGB的HEX十六进制颜色值转换后的十进制数值
-  hoist?: number; // 是否在成员列表中单独展示
-  number?: number; // 人数
-  member_limit?: number; // 成员上限
+export interface Role {
+  id: string; // 角色ID
+  name: string; // 角色名称
+  color: number; // ARGB的HEX十六进制颜色值转换后的十进制数值
+  hoist: number; // 是否在成员列表中单独展示
+  number: number; // 人数
+  member_limit: number; // 成员上限
 }
 
 /**
  * API权限对象
  */
-interface APIPermission {
-  path?: string; // API路径
-  method?: string; // 请求方法
-  desc?: string; // 描述
-  auth_status?: number; // 授权状态
+export interface APIPermission {
+  path: string; // API路径
+  method: string; // 请求方法
+  desc: string; // 描述
+  auth_status: number; // 授权状态
 }
 
 /**
  * API权限需求对象
  */
-interface APIPermissionDemand {
-  path?: string; // API路径
-  method?: string; // 请求方法
-  desc?: string; // 描述
-  api_id?: number; // API接口ID
+export interface APIPermissionDemand {
+  path: string; // API路径
+  method: string; // 请求方法
+  desc: string; // 描述
+  api_id: number; // API接口ID
 }
 
 /**
  * 音频控制对象
  */
-interface AudioControl {
-  audio_url?: string; // 音频URL
-  text?: string; // 状态文本
-  status?: number; // 播放状态
+export interface AudioControl {
+  audio_url: string; // 音频URL
+  text: string; // 状态文本
+  status: number; // 播放状态
 }
 
 /**
  * 音频状态
  */
-enum AudioStatus {
+export enum AudioStatus {
   START = 0, // 开始播放
   PAUSE = 1, // 暂停播放
   RESUME = 2, // 继续播放
@@ -246,42 +268,42 @@ enum AudioStatus {
 /**
  * 论坛帖子对象
  */
-interface Thread {
-  guild_id?: string; // 频道ID
-  channel_id?: string; // 子频道ID
-  author_id?: string; // 作者ID
-  thread_info?: ThreadInfo; // 帖子详情
+export interface Thread {
+  guild_id: string; // 频道ID
+  channel_id: string; // 子频道ID
+  author_id: string; // 作者ID
+  thread_info: ThreadInfo; // 帖子详情
 }
 
 /**
  * 帖子详情对象
  */
-interface ThreadInfo {
-  title?: string; // 标题
-  content?: string; // 内容
-  date_time?: string; // 发帖时间
+export interface ThreadInfo {
+  title: string; // 标题
+  content: string; // 内容
+  date_time: string; // 发帖时间
 }
 
 /**
  * 帖子内容对象
  */
-interface ThreadContent {
-  paragraphs?: Paragraph[]; // 段落列表
-  attachments?: Attachment[]; // 附件列表
+export interface ThreadContent {
+  paragraphs: Paragraph[]; // 段落列表
+  attachments: Attachment[]; // 附件列表
 }
 
 /**
  * 帖子段落对象
  */
-interface Paragraph {
-  type?: number; // 段落类型
-  elems?: ParagraphElem[]; // 元素列表
+export interface Paragraph {
+  type: number; // 段落类型
+  elems: ParagraphElem[]; // 元素列表
 }
 
 /**
  * 段落类型
  */
-enum ParagraphType {
+export enum ParagraphType {
   TEXT = 1, // 文本
   IMAGE = 2, // 图片
   VIDEO = 3, // 视频
@@ -290,60 +312,60 @@ enum ParagraphType {
 /**
  * 帖子元素对象
  */
-interface ParagraphElem {
-  type?: number; // 元素类型
-  text?: TextElem; // 文本元素
-  image?: ImageElem; // 图片元素
-  video?: VideoElem; // 视频元素
+export interface ParagraphElem {
+  type: number; // 元素类型
+  text: TextElem; // 文本元素
+  image: ImageElem; // 图片元素
+  video: VideoElem; // 视频元素
 }
 
 /**
  * 文本元素对象
  */
-interface TextElem {
-  text?: string; // 文本内容
+export interface TextElem {
+  text: string; // 文本内容
 }
 
 /**
  * 图片元素对象
  */
-interface ImageElem {
-  url?: string; // 图片URL
-  width?: number; // 宽度
-  height?: number; // 高度
+export interface ImageElem {
+  url: string; // 图片URL
+  width: number; // 宽度
+  height: number; // 高度
 }
 
 /**
  * 视频元素对象
  */
-interface VideoElem {
-  url?: string; // 视频URL
-  width?: number; // 宽度
-  height?: number; // 高度
+export interface VideoElem {
+  url: string; // 视频URL
+  width: number; // 宽度
+  height: number; // 高度
 }
 
 /**
  * 分页对象
  */
-interface Page {
-  before?: string; // 上一页
-  after?: string; // 下一页
-  limit?: string; // 每页数量
+export interface Page {
+  before: string; // 上一页
+  after: string; // 下一页
+  limit: string; // 每页数量
 }
 
 /**
  * DMS消息对象
  */
-interface DMS {
-  guild_id?: string; // 频道ID
-  channel_id?: string; // 子频道ID
-  create_time?: string; // 创建时间
+export interface DMS {
+  guild_id: string; // 频道ID
+  channel_id: string; // 子频道ID
+  create_time: string; // 创建时间
 }
 
 /**
  * WebSocket事件类型
  */
-enum EventType {
+export enum EventType {
   READY = 'READY', // 连接成功
   ERROR = 'ERROR', // 错误
   RESUMED = 'RESUMED', // 重连成功
@@ -360,7 +382,6 @@ enum EventType {
   MESSAGE_DELETE = 'MESSAGE_DELETE', // 消息删除
   MESSAGE_REACTION_ADD = 'MESSAGE_REACTION_ADD', // 消息反应添加
   MESSAGE_REACTION_REMOVE = 'MESSAGE_REACTION_REMOVE', // 消息反应移除
-  DIRECT_MESSAGE_CREATE = 'DIRECT_MESSAGE_CREATE', // 私信消息创建
   THREAD_CREATE = 'THREAD_CREATE', // 帖子创建
   THREAD_UPDATE = 'THREAD_UPDATE', // 帖子更新
   THREAD_DELETE = 'THREAD_DELETE', // 帖子删除
@@ -383,12 +404,16 @@ enum EventType {
   FORUM_REPLY_DELETE = 'FORUM_REPLY_DELETE', // 论坛评论删除
   INTERACTION_COMMAND = 'INTERACTION_COMMAND', // 互动按钮回调
   GUILD_MESSAGE_REACTIONS = 'GUILD_MESSAGE_REACTIONS', // 频道消息表情表态
+  AT_MESSAGE_CREATE = 'AT_MESSAGE_CREATE', // 文字子频道@机器人
+  GROUP_AT_MESSAGE_CREATE = 'GROUP_AT_MESSAGE_CREATE', // 用户在群聊@机器人发送消息
+  DIRECT_MESSAGE_CREATE = 'DIRECT_MESSAGE_CREATE', // 用户在频道私信内发送消息给机器人
+  C2C_MESSAGE_CREATE = 'C2C_MESSAGE_CREATE', // 用户在单聊发送消息给机器人
 }
 
 /**
  * Intent事件订阅类型
  */
-enum Intent {
+export enum Intent {
   GUILDS = 1 << 0, // 频道事件
   GUILD_MEMBERS = 1 << 1, // 成员事件
   GUILD_MESSAGES = 1 << 9, // 消息事件
@@ -396,15 +421,18 @@ enum Intent {
   DIRECT_MESSAGE = 1 << 12, // 私信事件
   OPEN_FORUMS_EVENT = 1 << 18, // 论坛事件
   AUDIO_OR_LIVE_CHANNEL_MEMBER = 1 << 19, // 音频/直播成员事件
+  GROUP_AND_C2C_EVENT = 1 << 25, // 单聊群聊事件
   INTERACTION = 1 << 26, // 互动事件
   MESSAGE_AUDIT = 1 << 27, // 消息审核事件
   FORUM_EVENT = 1 << 28, // 论坛事件
+  AUDIO_ACTION = 1 << 29, // 音频事件
+  PUBLIC_GUILD_MESSAGES = 1 << 30, // 公域的消息事件
 }
 
 /**
  * OpCode类型
  */
-enum OpCode {
+export enum OpCode {
   DISPATCH = 0, // 服务端进行消息推送
   HEARTBEAT = 1, // 客户端发送心跳
   IDENTIFY = 2, // 客户端发送鉴权
@@ -418,73 +446,73 @@ enum OpCode {
 /**
  * Gateway连接信息对象
  */
-interface Gateway {
-  url?: string; // WebSocket连接地址
-  shards?: number; // 建议的shard数
-  session_start_limit?: SessionStartLimit; // 创建Session限制
+export interface Gateway {
+  url: string; // WebSocket连接地址
+  shards: number; // 建议的shard数
+  session_start_limit: SessionStartLimit; // 创建Session限制
 }
 
 /**
  * Session限制对象
  */
-interface SessionStartLimit {
-  total?: number; // 每天可以创建Session总数
-  remaining?: number; // 目前还可以创建的Session数
-  reset_after?: number; // 重置计数的剩余时间(ms)
-  max_concurrency?: number; // 最大并发数
+export interface SessionStartLimit {
+  total: number; // 每天可以创建Session总数
+  remaining: number; // 目前还可以创建的Session数
+  reset_after: number; // 重置计数的剩余时间(ms)
+  max_concurrency: number; // 最大并发数
 }
 
 /**
  * 机器人信息对象
  */
-interface BotInfo {
-  id?: string; // 机器人ID
-  username?: string; // 机器人名称
-  avatar?: string; // 机器人头像
+export interface BotInfo {
+  id: string; // 机器人ID
+  username: string; // 机器人名称
+  avatar: string; // 机器人头像
 }
 
 /**
  * 机器人所在频道对象
  */
-interface BotGuild {
-  id?: string; // 频道ID
-  name?: string; // 频道名称
-  icon?: string; // 频道头像
+export interface BotGuild {
+  id: string; // 频道ID
+  name: string; // 频道名称
+  icon: string; // 频道头像
 }
 
 /**
  * 私信消息对象
  */
-interface DirectMessage {
-  id?: string; // 消息ID
-  channel_id?: string; // 子频道ID
-  guild_id?: string; // 频道ID
-  content?: string; // 消息内容
-  timestamp?: string; // 发送时间
-  author?: User; // 作者
-  attachments?: Attachment[]; // 附件
-  embeds?: Embed[]; // embed
-  ark?: Ark; // ark消息
+export interface DirectMessage {
+  id: string; // 消息ID
+  channel_id: string; // 子频道ID
+  guild_id: string; // 频道ID
+  content: string; // 消息内容
+  timestamp: string; // 发送时间
+  author: User; // 作者
+  attachments: Attachment[]; // 附件
+  embeds: Embed[]; // embed
+  ark: Ark; // ark消息
 }
 
 /**
  * 日程对象
  */
-interface Schedule {
-  id?: string; // 日程ID
-  name?: string; // 日程名称
-  description?: string; // 日程描述
-  start_timestamp?: string; // 日程开始时间戳(ms)
-  end_timestamp?: string; // 日程结束时间戳(ms)
-  creator?: User; // 创建者
-  jump_channel_id?: string; // 日程跳转子频道ID
-  remind_type?: string; // 日程提醒类型
+export interface Schedule {
+  id: string; // 日程ID
+  name: string; // 日程名称
+  description: string; // 日程描述
+  start_timestamp: string; // 日程开始时间戳(ms)
+  end_timestamp: string; // 日程结束时间戳(ms)
+  creator: User; // 创建者
+  jump_channel_id: string; // 日程跳转子频道ID
+  remind_type: string; // 日程提醒类型
 }
 
 /**
  * 日程提醒类型
  */
-enum ScheduleRemindType {
+export enum ScheduleRemindType {
   NO_REMIND = 0, // 不提醒
   START = 1, // 开始时提醒
   MINUTES_5 = 2, // 开始前5分钟提醒
@@ -496,26 +524,26 @@ enum ScheduleRemindType {
 /**
  * 表情对象（用于消息反应）
  */
-interface EmojiInfo {
-  id?: string; // 表情ID
-  type?: number; // 表情类型
+export interface EmojiInfo {
+  id: string; // 表情ID
+  type: number; // 表情类型
 }
 
 /**
  * 消息审核对象
  */
-interface MessageAudit {
-  audit_id?: string; // 审核ID
-  message_id?: string; // 消息ID
-  guild_id?: string; // 频道ID
-  channel_id?: string; // 子频道ID
-  audit_status?: number; // 审核状态
+export interface MessageAudit {
+  audit_id: string; // 审核ID
+  message_id: string; // 消息ID
+  guild_id: string; // 频道ID
+  channel_id: string; // 子频道ID
+  audit_status: number; // 审核状态
 }
 
 /**
  * 审核状态
  */
-enum AuditStatus {
+export enum AuditStatus {
   PENDING = 0, // 审核中
   APPROVED = 1, // 审核通过
   REJECTED = 2, // 审核不通过
@@ -524,22 +552,22 @@ enum AuditStatus {
 /**
  * 互动事件对象
  */
-interface Interaction {
-  id?: string; // 互动事件ID
-  type?: number; // 互动事件类型
-  channel_id?: string; // 子频道ID
-  guild_id?: string; // 频道ID
-  data?: any; // 互动事件数据
-  user_id?: string; // 用户ID
-  version?: number; // 版本
-  token?: string; // token
-  message?: Message; // 消息对象
+export interface Interaction {
+  id: string; // 互动事件ID
+  type: number; // 互动事件类型
+  channel_id: string; // 子频道ID
+  guild_id: string; // 频道ID
+  data: any; // 互动事件数据
+  user_id: string; // 用户ID
+  version: number; // 版本
+  token: string; // token
+  message: Message; // 消息对象
 }
 
 /**
  * 互动事件类型
  */
-enum InteractionType {
+export enum InteractionType {
   PING = 1, // ping
   APPLICATION_COMMAND = 2, // 应用命令
   MESSAGE_COMPONENT = 3, // 消息组件
@@ -550,65 +578,11 @@ enum InteractionType {
 /**
  * 回复对象
  */
-interface Reply {
-  id?: string; // 回复ID
-  channel_id?: string; // 子频道ID
-  guild_id?: string; // 频道ID
-  author_id?: string; // 作者ID
-  content?: string; // 回复内容
-  create_time?: string; // 创建时间
+export interface Reply {
+  id: string; // 回复ID
+  channel_id: string; // 子频道ID
+  guild_id: string; // 频道ID
+  author_id: string; // 作者ID
+  content: string; // 回复内容
+  create_time: string; // 创建时间
 }
-
-// 导出所有类型
-export {
-  type APIPermission,
-  type APIPermissionDemand,
-  type Ark,
-  type ArkKv,
-  type ArkKvObj,
-  type Attachment,
-  type AudioControl,
-  AudioStatus,
-  AuditStatus,
-  type BotGuild,
-  type BotInfo,
-  type Channel,
-  ChannelSubType,
-  ChannelType,
-  type DirectMessage,
-  type DMS,
-  type Embed,
-  type EmbedField,
-  type Emoji,
-  type EmojiInfo,
-  EmojiType,
-  EventType,
-  type Gateway,
-  // 基础类型
-  type Guild,
-  type ImageElem,
-  Intent,
-  type Interaction,
-  InteractionType,
-  type Member,
-  type Message,
-  type MessageAudit,
-  type MessageReference,
-  OpCode,
-  type Page,
-  type Paragraph,
-  type ParagraphElem,
-  ParagraphType,
-  type Reaction,
-  type Reply,
-  type Role,
-  type Schedule,
-  ScheduleRemindType,
-  type SessionStartLimit,
-  type TextElem,
-  type Thread,
-  type ThreadContent,
-  type ThreadInfo,
-  type User,
-  type VideoElem,
-};

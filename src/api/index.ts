@@ -2,31 +2,31 @@
  * API模块索引
  */
 
+import AudioAPI from './audio';
+import ChannelAPI from './channel';
+import ChannelMessageAPI from './channelMessage';
+import ForumAPI from './forum';
 import GuildAPI from './guild';
 import MemberAPI from './member';
-import ChannelAPI from './channel';
-import MessageAPI from './message';
-import ReactionAPI from './reaction';
-import AudioAPI from './audio';
-import ForumAPI from './forum';
-import PermissionAPI from './permission';
-import UserAPI from './user';
-import ScheduleAPI from './schedule';
 import MessageAuditAPI from './messageAudit';
+import PermissionAPI from './permission';
+import ReactionAPI from './reaction';
+import ScheduleAPI from './schedule';
+import UserAPI from './user';
 
 // 导出所有API类
 export {
+  AudioAPI,
+  ChannelAPI,
+  ChannelMessageAPI,
+  ForumAPI,
   GuildAPI,
   MemberAPI,
-  ChannelAPI,
-  MessageAPI,
-  ReactionAPI,
-  AudioAPI,
-  ForumAPI,
-  PermissionAPI,
-  UserAPI,
-  ScheduleAPI,
   MessageAuditAPI,
+  PermissionAPI,
+  ReactionAPI,
+  ScheduleAPI,
+  UserAPI,
 };
 
 // 默认导出

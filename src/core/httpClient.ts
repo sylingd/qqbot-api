@@ -3,21 +3,26 @@
  * 基于腾讯官方文档：https://bot.q.qq.com/wiki/develop/api-v2/
  */
 
-import axios, { AxiosInstance, AxiosRequestConfig, Method } from 'axios';
+import axios, {
+  type AxiosInstance,
+  type AxiosRequestConfig,
+  type Method,
+} from 'axios';
+import type BotTokenManager from './botToken';
 
 /**
  * HTTP客户端类
  */
 class QQBotHttpClient {
   private client: AxiosInstance;
-  private tokenManager: any;
+  private tokenManager: BotTokenManager;
 
   /**
    * 构造函数
    * @param tokenManager - Token管理器
    * @param isSandbox - 是否为沙箱环境
    */
-  constructor(tokenManager: any, isSandbox?: boolean) {
+  constructor(tokenManager: BotTokenManager, isSandbox?: boolean) {
     this.tokenManager = tokenManager;
 
     // 获取API基础URL
@@ -36,25 +41,25 @@ class QQBotHttpClient {
 
     // 添加请求拦截器
     this.client.interceptors.request.use(
-      async (config) => {
+      async config => {
         // 设置Authorization头部
-        config.headers.Authorization = await tokenManager.getToken();
+        config.headers.Authorization = await this.tokenManager.getToken();
         return config;
       },
-      (error) => {
+      error => {
         return Promise.reject(error);
-      }
+      },
     );
 
     // 添加响应拦截器
     this.client.interceptors.response.use(
-      (response) => {
+      response => {
         return response.data;
       },
-      (error) => {
+      error => {
         // 处理错误
         return Promise.reject(error);
-      }
+      },
     );
   }
 
@@ -114,19 +119,18 @@ class QQBotHttpClient {
    * @param config - 请求配置
    * @returns 响应数据
    */
-  private async request(method: Method, url: string, config?: AxiosRequestConfig): Promise<any> {
-    try {
-      const response = await this.client.request({
-        method,
-        url,
-        ...config,
-      });
-      
-      return response.data;
-    } catch (error) {
-      // 处理错误
-      throw error;
-    }
+  private async request(
+    method: Method,
+    url: string,
+    config?: AxiosRequestConfig,
+  ): Promise<any> {
+    const response = await this.client.request({
+      method,
+      url,
+      ...config,
+    });
+
+    return response.data;
   }
 }
 

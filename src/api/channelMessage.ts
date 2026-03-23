@@ -13,10 +13,10 @@
  * - https://bot.q.qq.com/wiki/develop/api-v2/server-inter/message/trans/text-chain.html
  */
 
-import { Message as MessageType } from '../types/index';
-import QQBotHttpClient from '../core/httpClient';
+import type QQBotHttpClient from '../core/httpClient';
+import type { Message as MessageType } from '../types/index';
 
-class MessageAPI {
+class ChannelMessageAPI {
   private httpClient: QQBotHttpClient;
 
   constructor(httpClient: QQBotHttpClient) {
@@ -30,7 +30,9 @@ class MessageAPI {
    * @returns {Promise<MessageType>} 消息信息
    */
   async getMessage(channelId: string, messageId: string): Promise<MessageType> {
-    const data = await this.httpClient.get(`/channels/${channelId}/messages/${messageId}`);
+    const data = await this.httpClient.get(
+      `/channels/${channelId}/messages/${messageId}`,
+    );
     return data;
   }
 
@@ -43,13 +45,19 @@ class MessageAPI {
    * @param {string} options.limit - 每页数量，默认20，最大50
    * @returns {Promise<MessageType[]>} 消息列表
    */
-  async getMessages(channelId: string, options: { type?: string; id?: string; limit?: string } = {}): Promise<MessageType[]> {
+  async getMessages(
+    channelId: string,
+    options: { type?: string; id?: string; limit?: string } = {},
+  ): Promise<MessageType[]> {
     const params: any = {};
     if (options.type !== undefined) params.type = options.type;
     if (options.id) params.id = options.id;
     if (options.limit) params.limit = options.limit;
 
-    const data = await this.httpClient.get(`/channels/${channelId}/messages`, params);
+    const data = await this.httpClient.get(
+      `/channels/${channelId}/messages`,
+      params,
+    );
     return data.map((msg: any) => msg);
   }
 
@@ -67,17 +75,23 @@ class MessageAPI {
    * @param {string} options.markdown - markdown消息
    * @returns {Promise<MessageType>} 发送的消息
    */
-  async sendMessage(channelId: string, options: {
-    content?: string;
-    embed?: any;
-    ark?: any;
-    message_reference?: { message_id: string };
-    image?: string;
-    msg_id?: string;
-    event_id?: number;
-    markdown?: any;
-  }): Promise<MessageType> {
-    const data = await this.httpClient.post(`/channels/${channelId}/messages`, options);
+  async sendMessage(
+    channelId: string,
+    options: {
+      content?: string;
+      embed?: any;
+      ark?: any;
+      message_reference?: { message_id: string };
+      image?: string;
+      msg_id?: string;
+      event_id?: number;
+      markdown?: any;
+    },
+  ): Promise<MessageType> {
+    const data = await this.httpClient.post(
+      `/channels/${channelId}/messages`,
+      options,
+    );
     return data;
   }
 
@@ -88,7 +102,11 @@ class MessageAPI {
    * @param {Object} options - 其他选项
    * @returns {Promise<MessageType>} 发送的消息
    */
-  async sendTextMessage(channelId: string, content: string, options: any = {}): Promise<MessageType> {
+  async sendTextMessage(
+    channelId: string,
+    content: string,
+    options: any = {},
+  ): Promise<MessageType> {
     return this.sendMessage(channelId, {
       content,
       ...options,
@@ -102,7 +120,11 @@ class MessageAPI {
    * @param {Object} options - 其他选项
    * @returns {Promise<MessageType>} 发送的消息
    */
-  async sendEmbedMessage(channelId: string, embed: any, options: any = {}): Promise<MessageType> {
+  async sendEmbedMessage(
+    channelId: string,
+    embed: any,
+    options: any = {},
+  ): Promise<MessageType> {
     return this.sendMessage(channelId, {
       embed,
       ...options,
@@ -116,7 +138,11 @@ class MessageAPI {
    * @param {Object} options - 其他选项
    * @returns {Promise<MessageType>} 发送的消息
    */
-  async sendArkMessage(channelId: string, ark: any, options: any = {}): Promise<MessageType> {
+  async sendArkMessage(
+    channelId: string,
+    ark: any,
+    options: any = {},
+  ): Promise<MessageType> {
     return this.sendMessage(channelId, {
       ark,
       ...options,
@@ -130,7 +156,11 @@ class MessageAPI {
    * @param {Object} options - 其他选项
    * @returns {Promise<MessageType>} 发送的消息
    */
-  async sendMarkdownMessage(channelId: string, markdown: any, options: any = {}): Promise<MessageType> {
+  async sendMarkdownMessage(
+    channelId: string,
+    markdown: any,
+    options: any = {},
+  ): Promise<MessageType> {
     return this.sendMessage(channelId, {
       markdown,
       ...options,
@@ -144,7 +174,11 @@ class MessageAPI {
    * @param {Object} options - 其他选项
    * @returns {Promise<MessageType>} 发送的消息
    */
-  async sendImageMessage(channelId: string, imageUrl: string, options: any = {}): Promise<MessageType> {
+  async sendImageMessage(
+    channelId: string,
+    imageUrl: string,
+    options: any = {},
+  ): Promise<MessageType> {
     return this.sendMessage(channelId, {
       image: imageUrl,
       ...options,
@@ -159,7 +193,12 @@ class MessageAPI {
    * @param {Object} options - 其他选项
    * @returns {Promise<MessageType>} 发送的消息
    */
-  async sendReplyMessage(channelId: string, content: string, referenceMessageId: string, options: any = {}): Promise<MessageType> {
+  async sendReplyMessage(
+    channelId: string,
+    content: string,
+    referenceMessageId: string,
+    options: any = {},
+  ): Promise<MessageType> {
     return this.sendMessage(channelId, {
       content,
       message_reference: {
@@ -176,10 +215,13 @@ class MessageAPI {
    * @param {boolean} hideTip - 是否隐藏撤回提示
    * @returns {Promise<void>}
    */
-  async deleteMessage(channelId: string, messageId: string, hideTip: boolean = false): Promise<void> {
-    const url = hideTip 
-      ? `/channels/${channelId}/messages/${messageId}?hide_tip=true`
-      : `/channels/${channelId}/messages/${messageId}`;
+  async deleteMessage(
+    channelId: string,
+    messageId: string,
+    hideTip: boolean = false,
+  ): Promise<void> {
+    let url = `/channels/${channelId}/messages/${messageId}`;
+    if (hideTip) url += '?hide_tip=true';
     await this.httpClient.delete(url);
   }
 
@@ -209,7 +251,10 @@ class MessageAPI {
    * @returns {Promise<Object>} 发送的消息
    */
   async sendDMS(guildId: string, options: any): Promise<any> {
-    const data = await this.httpClient.post(`/dms/${guildId}/messages`, options);
+    const data = await this.httpClient.post(
+      `/dms/${guildId}/messages`,
+      options,
+    );
     return data;
   }
 
@@ -220,8 +265,13 @@ class MessageAPI {
    * @param {string} messageId - 消息ID
    * @returns {Promise<Object>} 富媒体消息信息
    */
-  async getRichMediaMessage(channelId: string, messageId: string): Promise<any> {
-    const data = await this.httpClient.get(`/channels/${channelId}/messages/${messageId}`);
+  async getRichMediaMessage(
+    channelId: string,
+    messageId: string,
+  ): Promise<any> {
+    const data = await this.httpClient.get(
+      `/channels/${channelId}/messages/${messageId}`,
+    );
     return {
       id: data.id,
       channel_id: data.channel_id,
@@ -241,10 +291,17 @@ class MessageAPI {
    * @param {Object} keyboard - 按钮配置
    * @returns {Promise<MessageType>} 更新后的消息
    */
-  async setMessageButtons(channelId: string, messageId: string, keyboard: any): Promise<MessageType> {
-    const data = await this.httpClient.patch(`/channels/${channelId}/messages/${messageId}`, {
-      keyboard,
-    });
+  async setMessageButtons(
+    channelId: string,
+    messageId: string,
+    keyboard: any,
+  ): Promise<MessageType> {
+    const data = await this.httpClient.patch(
+      `/channels/${channelId}/messages/${messageId}`,
+      {
+        keyboard,
+      },
+    );
     return data;
   }
 
@@ -254,7 +311,10 @@ class MessageAPI {
    * @returns {Promise<Object>} 模板信息
    */
   async createButtonTemplate(template: any): Promise<any> {
-    const data = await this.httpClient.post('/messages/button-templates', template);
+    const data = await this.httpClient.post(
+      '/messages/button-templates',
+      template,
+    );
     return data;
   }
 
@@ -277,4 +337,4 @@ class MessageAPI {
   }
 }
 
-export default MessageAPI;
+export default ChannelMessageAPI;
