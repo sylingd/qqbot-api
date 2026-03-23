@@ -197,6 +197,7 @@ class QQBotHttpClient {
 
   stop(): void {
     this.abort.abort();
+    this.abort = new AbortController();
   }
 }
 
