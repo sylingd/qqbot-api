@@ -84,7 +84,7 @@ export interface EventMap {
 class QQBotClient {
   private tokenManager: BotToken;
   public http: QQBotHttpClient;
-  private ws: WebSocketClient | null = null;
+  public ws: WebSocketClient | null = null;
 
   // API instances
   public guild: GuildAPI;

@@ -197,7 +197,7 @@ class WebSocketGateway extends EventEmitter {
    * 处理重连
    */
   handleReconnect(): void {
-    this.emit(InnerEventType.RECONNECTING);
+    this.emit(InnerEventType.RECONNECT);
     this.reconnect();
   }
 

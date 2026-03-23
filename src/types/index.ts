@@ -365,6 +365,7 @@ export interface DMS {
 export enum InnerEventType {
   DISPATCH = 'DISPATCH', // 分发事件
   CONNECTED = 'CONNECTED', // 连接成功
+  RECONNECT = 'RECONNECT', // 即将重连
   RECONNECTING = 'RECONNECTING', // 正在重连
   CLOSE = 'CLOSE', // 连接关闭
   DEBUG = 'DEBUG', // 调试信息
