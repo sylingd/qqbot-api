@@ -102,7 +102,11 @@ class QQBotClient {
   public forum: ForumAPI;
   public schedule: ScheduleAPI;
 
+  public abort: AbortController;
+
   constructor(config: QQBotConfig) {
+    this.abort = new AbortController();
+
     this.tokenManager = new BotToken(
       config.appId,
       config.token,
@@ -203,6 +207,7 @@ class QQBotClient {
    * 停止机器人
    */
   stop(): void {
+    this.http.stop();
     if (this.ws) {
       this.ws.close();
       this.ws = null;

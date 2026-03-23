@@ -11,10 +11,17 @@ async function fetchWrapper(
   url: string,
   options: RequestInit = {},
   timeout: number = 10000,
+  signal?: AbortSignal,
 ) {
   // 创建一个 AbortController 来处理超时
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  if (signal) {
+    signal.addEventListener('abort', () => {
+      controller.abort();
+    });
+  }
 
   try {
     // 将 signal 添加到 options 中
@@ -39,6 +46,7 @@ class QQBotHttpClient {
   private tokenManager: BotTokenManager;
   private baseURL: string;
   private timeout: number;
+  private abort: AbortController;
 
   /**
    * 构造函数
@@ -53,6 +61,8 @@ class QQBotHttpClient {
   ) {
     this.tokenManager = tokenManager;
     this.timeout = timeout;
+
+    this.abort = new AbortController();
 
     // 获取API基础URL
     this.baseURL = isSandbox
@@ -111,7 +121,12 @@ class QQBotHttpClient {
 
     // 使用封装的 fetch 发送请求
     try {
-      const res = await fetchWrapper(fullUrl, options, this.timeout);
+      const res = await fetchWrapper(
+        fullUrl,
+        options,
+        this.timeout,
+        this.abort.signal,
+      );
       const json = await res.json();
       if (res.status >= 400) {
         throw createErrorFromResponse(json);
@@ -178,6 +193,10 @@ class QQBotHttpClient {
    */
   async patch(url: string, data?: any): Promise<any> {
     return this.request('PATCH', url, data);
+  }
+
+  stop(): void {
+    this.abort.abort();
   }
 }
 
