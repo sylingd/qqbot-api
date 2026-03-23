@@ -17,9 +17,10 @@ import {
   ScheduleAPI,
   UserAPI,
 } from './api';
+import { WebSocketGateway } from './core';
 import BotToken from './core/botToken';
 import QQBotHttpClient from './core/httpClient';
-import WebSocketClient from './core/websocket';
+import type WebSocketClient from './core/websocket';
 import {
   type C2CMessage,
   EventType,
@@ -30,10 +31,12 @@ import {
 
 export interface QQBotConfig {
   appId: string;
-  token: string;
-  secret?: string;
-  isSandbox?: boolean;
+  token?: string;
+  clientSecret: string;
+  sandbox?: boolean;
   timeout?: number;
+  intents?: number;
+  shard?: number[];
 }
 
 export interface EventMap {
@@ -79,7 +82,6 @@ export interface EventMap {
 }
 
 class QQBotClient {
-  private config: QQBotConfig;
   private tokenManager: BotToken;
   public http: QQBotHttpClient;
   private ws: WebSocketClient | null = null;
@@ -99,17 +101,28 @@ class QQBotClient {
   public schedule: ScheduleAPI;
 
   constructor(config: QQBotConfig) {
-    this.config = config;
-    // 默认超时时间为10秒，如果没有指定则使用默认值
-    const timeout = config.timeout ?? 10000;
-    this.tokenManager = new BotToken(config.appId, config.token, config.secret);
+    this.tokenManager = new BotToken(
+      config.appId,
+      config.token,
+      config.clientSecret,
+    );
 
-    // Initialize HTTP client
+    // 创建HTTP客户端
     this.http = new QQBotHttpClient(
       this.tokenManager,
-      config.isSandbox,
-      timeout,
+      config.sandbox,
+      config.timeout ?? 10000,
     );
+
+    // 创建WebSocket Gateway
+    if (typeof config.intents === 'number') {
+      this.ws = new WebSocketGateway({
+        tokenManager: this.tokenManager,
+        getGateway: this.getGateway.bind(this),
+        intents: config.intents,
+        shard: config.shard || [0, 1],
+      });
+    }
 
     // Initialize API instances
     this.guild = new GuildAPI(this.http);
@@ -133,10 +146,9 @@ class QQBotClient {
    */
   on<T extends keyof EventMap>(event: T, listener: EventMap[T]): void {
     if (!this.ws) {
-      console.warn(
-        'WebSocket not initialized yet. Please call bot.start() first.',
+      throw new Error(
+        'WebSocket not initialized yet. Please pass intents parameter.',
       );
-      return;
     }
     this.ws.on(event as string, listener);
   }
@@ -157,20 +169,32 @@ class QQBotClient {
    * 启动机器人
    * @param intents 订阅的事件类型
    */
-  async start(intents = 0): Promise<void> {
-    // Get gateway info
-    const gatewayInfo = await this.getGatewayBot();
+  async start(): Promise<void> {
+    if (!this.ws) {
+      throw new Error(
+        'WebSocket not initialized yet. Please pass intents parameter.',
+      );
+    }
 
-    // Initialize WebSocket
-    this.ws = new WebSocketClient({
-      token: await this.tokenManager.getToken(),
-      url: gatewayInfo.url || '',
-      intents,
-      appId: this.config.appId,
-    });
+    await this.ws.connect();
+  }
 
-    // Start connection
-    this.ws.connect(gatewayInfo.url);
+  /**
+   * 获取Gateway地址
+   * @returns {Promise<string>} Gateway URL
+   */
+  async getGateway() {
+    const data = await this.http.get('/gateway');
+    return data.url;
+  }
+
+  /**
+   * 获取Gateway信息
+   * @returns Gateway信息
+   */
+  async getGatewayBot(): Promise<Gateway> {
+    const data = await this.http.get('/gateway/bot');
+    return data;
   }
 
   /**
@@ -181,15 +205,6 @@ class QQBotClient {
       this.ws.close();
       this.ws = null;
     }
-  }
-
-  /**
-   * 获取Gateway信息
-   * @returns Gateway信息
-   */
-  async getGatewayBot(): Promise<Gateway> {
-    const data = await this.http.get('/gateway/bot');
-    return data;
   }
 }
 

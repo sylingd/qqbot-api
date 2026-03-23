@@ -42,16 +42,19 @@ class BotTokenManager {
     }
 
     try {
-      const response = await fetch('https://bots.qq.com/app/getAppAccessToken', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        'https://bots.qq.com/app/getAppAccessToken',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            appId: this.appId,
+            clientSecret: this.clientSecret,
+          }),
         },
-        body: JSON.stringify({
-          appId: this.appId,
-          clientSecret: this.clientSecret,
-        }),
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

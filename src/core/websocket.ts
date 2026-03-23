@@ -6,15 +6,13 @@
 import EventEmitter from 'node:events';
 import WebSocket from 'ws';
 import { EventType, InnerEventType, Intent, OpCode } from '../types/index';
+import type BotTokenManager from './botToken';
 
 interface WebSocketConfig {
-  appId: string;
-  token: string;
+  tokenManager: BotTokenManager;
   intents?: number;
   shard?: number[];
-  url: string; // 修改：添加url属性
-  getGateway?: () => Promise<string>;
-  http?: any;
+  getGateway: () => Promise<string>;
 }
 
 interface Payload {
@@ -28,13 +26,10 @@ interface Payload {
  * WebSocket Gateway客户端
  */
 class WebSocketGateway extends EventEmitter {
-  private appId: string;
-  private token: string;
+  private tokenManager: BotTokenManager;
   private intents: number;
   private shard: number[];
-  private url: string; // 新增：存储网关URL
-  private getGateway?: () => Promise<string>;
-  private http?: any;
+  private getGateway: () => Promise<string>;
   private ws: WebSocket | null = null;
   private sessionId: string | null = null;
   private seq: number = 0;
@@ -56,15 +51,12 @@ class WebSocketGateway extends EventEmitter {
   constructor(config: WebSocketConfig) {
     super();
 
-    this.appId = config.appId;
-    this.token = config.token;
+    this.tokenManager = config.tokenManager;
     this.intents =
       config.intents ||
       Intent.GUILDS | Intent.GUILD_MESSAGES | Intent.GUILD_MEMBERS;
     this.shard = config.shard || [0, 1];
-    this.url = config.url; // 新增：存储网关URL
     this.getGateway = config.getGateway;
-    this.http = config.http;
   }
 
   /**
@@ -72,7 +64,15 @@ class WebSocketGateway extends EventEmitter {
    * @param {string} url - WebSocket URL
    */
   async connect(url?: string): Promise<void> {
-    const gatewayUrl = url || this.url; // 使用传入的URL或配置中的URL
+    let gatewayUrl = url;
+
+    if (!gatewayUrl) {
+      gatewayUrl = await this.getGateway();
+    }
+
+    if (!gatewayUrl) {
+      throw new Error('Gateway URL is required');
+    }
 
     if (this.ws) {
       this.ws.close();
@@ -237,21 +237,7 @@ class WebSocketGateway extends EventEmitter {
    */
   async identify(): Promise<void> {
     // 获取token
-    let token = this.token;
-
-    // 如果没有token，从HTTP客户端获取
-    if (!token && this.http) {
-      try {
-        const tokenData = await this.http.getAccessToken();
-        token = tokenData.access_token;
-      } catch (error) {
-        this.emit(
-          EventType.ERROR,
-          new Error(`Failed to get access token: ${(error as Error).message}`),
-        );
-        return;
-      }
-    }
+    const token = await this.tokenManager.checkAndRefreshToken();
 
     if (!token) {
       this.emit(
@@ -267,11 +253,11 @@ class WebSocketGateway extends EventEmitter {
         token: `QQBot ${token}`,
         intents: this.intents,
         shard: this.shard,
-        properties: {
-          $os: process.platform,
-          $browser: 'qqbot-plugin',
-          $device: 'qqbot-plugin',
-        },
+        // properties: {
+        //   $os: process.platform,
+        //   $browser: 'qqbot-plugin',
+        //   $device: 'qqbot-plugin',
+        // },
       },
     };
 
@@ -283,21 +269,7 @@ class WebSocketGateway extends EventEmitter {
    */
   async resume(): Promise<void> {
     // 获取token
-    let token = this.token;
-
-    // 如果没有token，从HTTP客户端获取
-    if (!token && this.http) {
-      try {
-        const tokenData = await this.http.getAccessToken();
-        token = tokenData.access_token;
-      } catch (error) {
-        this.emit(
-          EventType.ERROR,
-          new Error(`Failed to get access token: ${(error as Error).message}`),
-        );
-        return;
-      }
-    }
+    const token = await this.tokenManager.checkAndRefreshToken();
 
     if (!token) {
       this.emit(EventType.ERROR, new Error('No token available for resume'));
@@ -370,9 +342,7 @@ class WebSocketGateway extends EventEmitter {
       try {
         this.emit(InnerEventType.RECONNECTING);
 
-        // 获取新的gateway地址
-        const gatewayUrl = this.getGateway ? await this.getGateway() : this.url;
-        await this.connect(gatewayUrl);
+        await this.connect();
 
         this.isReconnecting = false;
       } catch (error) {
