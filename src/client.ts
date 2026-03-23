@@ -33,7 +33,7 @@ interface QQBotConfig {
   token: string;
   secret?: string;
   isSandbox?: boolean;
-  timeout?: number;  // 新增超时配置
+  timeout?: number;
 }
 
 interface EventMap {
@@ -105,10 +105,14 @@ class QQBotClient {
     this.config = config;
     // 默认超时时间为10秒，如果没有指定则使用默认值
     const timeout = config.timeout ?? 10000;
-    this.tokenManager = new BotToken(config.appId, config.token, config.secret, timeout);
+    this.tokenManager = new BotToken(config.appId, config.token, config.secret);
 
     // Initialize HTTP client
-    this.http = new QQBotHttpClient(this.tokenManager, config.isSandbox, timeout);
+    this.http = new QQBotHttpClient(
+      this.tokenManager,
+      config.isSandbox,
+      timeout,
+    );
 
     // Initialize API instances
     this.guild = new GuildAPI(this.http);
