@@ -3,17 +3,20 @@
  * 基于腾讯官方文档：https://bot.q.qq.com/wiki/develop/api-v2/
  */
 
-import AudioAPI from './api/audio';
-import ChannelAPI from './api/channel';
-import ChannelMessageAPI from './api/channelMessage';
-import ForumAPI from './api/forum';
-import GuildAPI from './api/guild';
-import MemberAPI from './api/member';
-import MessageAuditAPI from './api/messageAudit';
-import PermissionAPI from './api/permission';
-import ReactionAPI from './api/reaction';
-import ScheduleAPI from './api/schedule';
-import UserAPI from './api/user';
+import {
+  AudioAPI,
+  ChannelAPI,
+  ChannelMessageAPI,
+  ForumAPI,
+  GuildAPI,
+  MemberAPI,
+  MessageAPI,
+  MessageAuditAPI,
+  PermissionAPI,
+  ReactionAPI,
+  ScheduleAPI,
+  UserAPI,
+} from './api';
 import BotToken from './core/botToken';
 import QQBotHttpClient from './core/httpClient';
 import WebSocketClient from './core/websocket';
@@ -87,6 +90,7 @@ class QQBotClient {
   public guild: GuildAPI;
   public channel: ChannelAPI;
   public member: MemberAPI;
+  public message: MessageAPI;
   public channelMessage: ChannelMessageAPI;
   public messageAudit: MessageAuditAPI;
   public user: UserAPI;
@@ -107,6 +111,7 @@ class QQBotClient {
     this.guild = new GuildAPI(this.http);
     this.channel = new ChannelAPI(this.http);
     this.member = new MemberAPI(this.http);
+    this.message = new MessageAPI(this.http);
     this.channelMessage = new ChannelMessageAPI(this.http);
     this.messageAudit = new MessageAuditAPI(this.http);
     this.user = new UserAPI(this.http);

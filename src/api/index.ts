@@ -8,6 +8,7 @@ import ChannelMessageAPI from './channelMessage';
 import ForumAPI from './forum';
 import GuildAPI from './guild';
 import MemberAPI from './member';
+import MessageAPI from './message';
 import MessageAuditAPI from './messageAudit';
 import PermissionAPI from './permission';
 import ReactionAPI from './reaction';
@@ -22,24 +23,10 @@ export {
   ForumAPI,
   GuildAPI,
   MemberAPI,
-  MessageAuditAPI,
-  PermissionAPI,
-  ReactionAPI,
-  ScheduleAPI,
-  UserAPI,
-};
-
-// 默认导出
-export default {
-  GuildAPI,
-  MemberAPI,
-  ChannelAPI,
   MessageAPI,
-  ReactionAPI,
-  AudioAPI,
-  ForumAPI,
-  PermissionAPI,
-  UserAPI,
-  ScheduleAPI,
   MessageAuditAPI,
+  PermissionAPI,
+  ReactionAPI,
+  ScheduleAPI,
+  UserAPI,
 };
