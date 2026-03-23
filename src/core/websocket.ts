@@ -237,7 +237,7 @@ class WebSocketGateway extends EventEmitter {
    */
   async identify(): Promise<void> {
     // 获取token
-    const token = await this.tokenManager.checkAndRefreshToken();
+    const token = await this.tokenManager.getToken();
 
     if (!token) {
       this.emit(
@@ -269,7 +269,7 @@ class WebSocketGateway extends EventEmitter {
    */
   async resume(): Promise<void> {
     // 获取token
-    const token = await this.tokenManager.checkAndRefreshToken();
+    const token = await this.tokenManager.getToken();
 
     if (!token) {
       this.emit(EventType.ERROR, new Error('No token available for resume'));

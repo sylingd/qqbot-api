@@ -78,21 +78,11 @@ class BotTokenManager {
    * 检查并刷新Bot Token
    * @returns {Promise<string>} Bot Token
    */
-  async checkAndRefreshToken(): Promise<string> {
+  async getToken(): Promise<string> {
     if (!this.botToken || Date.now() >= this.botTokenExpireTime) {
       await this.getBotToken();
     }
     return this.botToken!;
-  }
-
-  /**
-   * 获取完整的Bot Token字符串
-   * 格式：Bot {appid}.{token}
-   * @returns {Promise<string>} 完整的Bot Token
-   */
-  async getToken(): Promise<string> {
-    const token = await this.checkAndRefreshToken();
-    return `Bot ${this.appId}.${token}`;
   }
 
   /**
