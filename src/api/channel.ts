@@ -3,10 +3,13 @@
  * 基于腾讯官方文档：https://bot.q.qq.com/wiki/develop/api-v2/server-inter/channel/
  */
 
-import { Channel  } from '../types/index.js';
+import { Channel } from '../types/index';
+import QQBotHttpClient from '../core/httpClient';
 
 class ChannelAPI {
-  constructor(httpClient) {
+  private httpClient: QQBotHttpClient;
+
+  constructor(httpClient: QQBotHttpClient) {
     this.httpClient = httpClient;
   }
 
@@ -15,9 +18,9 @@ class ChannelAPI {
    * @param {string} guildId - 频道ID
    * @returns {Promise<Channel[]>} 子频道列表
    */
-  async getChannels(guildId) {
+  async getChannels(guildId: string): Promise<Channel[]> {
     const data = await this.httpClient.get(`/guilds/${guildId}/channels`);
-    return data.map(channel => new Channel(channel));
+    return data;
   }
 
   /**
@@ -25,9 +28,9 @@ class ChannelAPI {
    * @param {string} channelId - 子频道ID
    * @returns {Promise<Channel>} 子频道信息
    */
-  async getChannel(channelId) {
+  async getChannel(channelId: string): Promise<Channel> {
     const data = await this.httpClient.get(`/channels/${channelId}`);
-    return new Channel(data);
+    return data;
   }
 
   /**
@@ -45,9 +48,22 @@ class ChannelAPI {
    * @param {string} options.application_id - 应用ID
    * @returns {Promise<Channel>} 创建的子频道
    */
-  async createChannel(guildId, options) {
+  async createChannel(
+    guildId: string,
+    options: {
+      name: string;
+      type?: number;
+      sub_type?: number;
+      position?: number;
+      parent_id?: string;
+      private_type?: number;
+      private_user_list?: any[];
+      speak_permission?: number;
+      application_id?: string;
+    }
+  ): Promise<Channel> {
     const data = await this.httpClient.post(`/guilds/${guildId}/channels`, options);
-    return new Channel(data);
+    return data;
   }
 
   /**
@@ -63,9 +79,20 @@ class ChannelAPI {
    * @param {string} options.application_id - 应用ID
    * @returns {Promise<Channel>} 修改后的子频道
    */
-  async updateChannel(channelId, options) {
+  async updateChannel(
+    channelId: string,
+    options: {
+      name?: string;
+      position?: number;
+      parent_id?: string;
+      private_type?: number;
+      private_user_list?: any[];
+      speak_permission?: number;
+      application_id?: string;
+    }
+  ): Promise<Channel> {
     const data = await this.httpClient.patch(`/channels/${channelId}`, options);
-    return new Channel(data);
+    return data;
   }
 
   /**
@@ -73,9 +100,9 @@ class ChannelAPI {
    * @param {string} channelId - 子频道ID
    * @returns {Promise<Channel>} 删除的子频道
    */
-  async deleteChannel(channelId) {
+  async deleteChannel(channelId: string): Promise<Channel> {
     const data = await this.httpClient.delete(`/channels/${channelId}`);
-    return new Channel(data);
+    return data;
   }
 }
 

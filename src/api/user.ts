@@ -8,10 +8,13 @@
  * - https://bot.q.qq.com/wiki/develop/api-v2/server-inter/user/manage/event.html
  */
 
-import { BotInfo, BotGuild } from '../types/index.js';
+import { BotInfo, BotGuild } from '../types/index';
+import QQBotHttpClient from '../core/httpClient';
 
 class UserAPI {
-  constructor(httpClient) {
+  private httpClient: QQBotHttpClient;
+
+  constructor(httpClient: QQBotHttpClient) {
     this.httpClient = httpClient;
   }
 
@@ -19,9 +22,9 @@ class UserAPI {
    * 获取机器人信息
    * @returns {Promise<BotInfo>} 机器人信息
    */
-  async getMe() {
+  async getMe(): Promise<BotInfo> {
     const data = await this.httpClient.get('/users/@me');
-    return new BotInfo(data);
+    return data;
   }
 
   /**
@@ -32,14 +35,14 @@ class UserAPI {
    * @param {number} options.limit - 每页数量，默认100，最大100
    * @returns {Promise<BotGuild[]>} 频道列表
    */
-  async getMeGuilds(options = {}) {
-    const params = {};
+  async getMeGuilds(options: { before?: string; after?: string; limit?: number } = {}): Promise<BotGuild[]> {
+    const params: any = {};
     if (options.before) params.before = options.before;
     if (options.after) params.after = options.after;
     if (options.limit) params.limit = options.limit;
 
     const data = await this.httpClient.get('/users/@me/guilds', params);
-    return data.map(guild => new BotGuild(guild));
+    return data.map((guild: any) => guild);
   }
 
   /**
@@ -47,7 +50,7 @@ class UserAPI {
    * 用于获取当前用户（机器人）的详细信息
    * @returns {Promise<Object>} 用户信息
    */
-  async getCurrentUser() {
+  async getCurrentUser(): Promise<any> {
     const data = await this.httpClient.get('/users/@me');
     return {
       id: data.id,
@@ -66,7 +69,7 @@ class UserAPI {
    * @param {string} userId - 用户ID
    * @returns {Promise<Object>} 用户信息
    */
-  async getUser(guildId, userId) {
+  async getUser(guildId: string, userId: string): Promise<any> {
     const data = await this.httpClient.get(`/guilds/${guildId}/members/${userId}`);
     return {
       user: data.user,
@@ -83,8 +86,8 @@ class UserAPI {
    * @param {string} channelId - 子频道ID（可选）
    * @returns {Promise<Object>} 分享链接信息
    */
-  async getShareUrl(guildId, channelId = null) {
-    const params = { guild_id: guildId };
+  async getShareUrl(guildId: string, channelId: string | null = null): Promise<any> {
+    const params: any = { guild_id: guildId };
     if (channelId) params.channel_id = channelId;
 
     const data = await this.httpClient.get('/users/@me/share_url', params);
@@ -101,7 +104,7 @@ class UserAPI {
    * @param {string} userId - 用户ID
    * @returns {Promise<void>}
    */
-  async addBot(guildId, userId) {
+  async addBot(guildId: string, userId: string): Promise<void> {
     await this.httpClient.post(`/guilds/${guildId}/members/${userId}/bot`, {
       user_id: userId,
     });
@@ -114,7 +117,7 @@ class UserAPI {
    * @param {string} userId - 用户ID
    * @returns {Promise<void>}
    */
-  async removeBot(guildId, userId) {
+  async removeBot(guildId: string, userId: string): Promise<void> {
     await this.httpClient.delete(`/guilds/${guildId}/members/${userId}/bot`);
   }
 
@@ -125,7 +128,7 @@ class UserAPI {
    * @param {string} userId - 用户ID
    * @returns {Promise<void>}
    */
-  async rejectBotMessage(guildId, userId) {
+  async rejectBotMessage(guildId: string, userId: string): Promise<void> {
     await this.httpClient.post(`/guilds/${guildId}/members/${userId}/bot/message/reject`);
   }
 
@@ -136,7 +139,7 @@ class UserAPI {
    * @param {string} userId - 用户ID
    * @returns {Promise<void>}
    */
-  async allowBotMessage(guildId, userId) {
+  async allowBotMessage(guildId: string, userId: string): Promise<void> {
     await this.httpClient.post(`/guilds/${guildId}/members/${userId}/bot/message/allow`);
   }
 }

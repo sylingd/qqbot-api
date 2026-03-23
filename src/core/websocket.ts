@@ -5,68 +5,96 @@
 
 import WebSocket from 'ws';
 import EventEmitter from 'events';
-import { OpCode, Intent, EventType  } from '../types/index.js';
+import { OpCode, Intent, EventType } from '../types/index';
+
+interface WebSocketConfig {
+  appId: string;
+  token: string;
+  intents?: number;
+  shard?: number[];
+  url: string;  // 修改：添加url属性
+  getGateway?: () => Promise<string>;
+  http?: any;
+}
+
+interface Payload {
+  op: number;
+  d?: any;
+  s?: number;
+  t?: string;
+}
 
 /**
  * WebSocket Gateway客户端
  */
 class WebSocketGateway extends EventEmitter {
+  private appId: string;
+  private token: string;
+  private intents: number;
+  private shard: number[];
+  private url: string;  // 新增：存储网关URL
+  private getGateway?: () => Promise<string>;
+  private http?: any;
+  private ws: WebSocket | null = null;
+  private sessionId: string | null = null;
+  private seq: number = 0;
+  private heartbeatInterval: NodeJS.Timeout | null = null;
+  private reconnectTimeout: NodeJS.Timeout | null = null;
+  private isConnected: boolean = false;
+  private isReconnecting: boolean = false;
+
   /**
    * 构造函数
-   * @param {Object} config - 配置对象
+   * @param {WebSocketConfig} config - 配置对象
    * @param {string} config.appId - 机器人AppID
    * @param {string} config.token - 机器人Token
    * @param {number} config.intents - 订阅的事件
    * @param {number} config.shard - 分片信息 [shard_id, shard_count]
+   * @param {string} config.url - WebSocket URL
    * @param {Function} config.getGateway - 获取Gateway地址的方法
    * @param {Object} config.http - HTTP客户端（用于获取token）
    */
-  constructor(config = {}) {
+  constructor(config: WebSocketConfig) {
     super();
 
     this.appId = config.appId;
     this.token = config.token;
     this.intents = config.intents || Intent.GUILDS | Intent.GUILD_MESSAGES | Intent.GUILD_MEMBERS;
     this.shard = config.shard || [0, 1];
+    this.url = config.url;  // 新增：存储网关URL
     this.getGateway = config.getGateway;
     this.http = config.http;
-
-    this.ws = null;
-    this.sessionId = null;
-    this.seq = 0;
-    this.heartbeatInterval = null;
-    this.reconnectTimeout = null;
-    this.isConnected = false;
-    this.isReconnecting = false;
   }
 
   /**
    * 连接WebSocket
    * @param {string} url - WebSocket URL
    */
-  async connect(url) {
+  async connect(url?: string): Promise<void> {
+    const gatewayUrl = url || this.url;  // 使用传入的URL或配置中的URL
+    
     if (this.ws) {
       this.ws.close();
     }
 
     return new Promise((resolve, reject) => {
       try {
-        this.ws = new WebSocket(url);
+        this.ws = new WebSocket(gatewayUrl);
 
-        this.ws.on('open', () => {
+        this.ws!.on('open', () => {
           this.isConnected = true;
           this.emit('connected');
         });
 
-        this.ws.on('message', (data) => {
+        this.ws!.on('message', (data) => {
           this.handleMessage(data);
         });
 
-        this.ws.on('close', (code, reason) => {
+        this.ws!.on('close', (code: number, reason: Buffer) => {
           this.handleClose(code, reason);
         });
 
-        this.ws.on('error', (error) => {
+        this.ws!.on('error', (error: Error) => {
           this.emit('error', error);
           reject(error);
         });
@@ -86,9 +114,9 @@ class WebSocketGateway extends EventEmitter {
    * 处理消息
    * @param {Buffer} data - 消息数据
    */
-  handleMessage(data) {
+  handleMessage(data: WebSocket.Data): void {
     try {
-      const payload = JSON.parse(data.toString());
+      const payload: Payload = JSON.parse(data.toString());
 
       // 更新seq
       if (payload.s) {
@@ -128,9 +156,9 @@ class WebSocketGateway extends EventEmitter {
 
   /**
    * 处理Hello消息
-   * @param {Object} payload - 消息内容
+   * @param {Payload} payload - 消息内容
    */
-  handleHello(payload) {
+  handleHello(payload: Payload): void {
     // 开始心跳
     this.startHeartbeat(payload.d.heartbeat_interval);
 
@@ -144,9 +172,9 @@ class WebSocketGateway extends EventEmitter {
 
   /**
    * 处理Dispatch消息
-   * @param {Object} payload - 消息内容
+   * @param {Payload} payload - 消息内容
    */
-  handleDispatch(payload) {
+  handleDispatch(payload: Payload): void {
     const { t: eventType, d: eventData } = payload;
 
     // 保存session_id
@@ -155,7 +183,9 @@ class WebSocketGateway extends EventEmitter {
       this.emit('ready', eventData);
     } else {
       // 触发对应事件
-      this.emit(eventType, eventData);
+      if (eventType) {
+        this.emit(eventType, eventData);
+      }
       this.emit('dispatch', eventType, eventData);
     }
   }
@@ -163,23 +193,23 @@ class WebSocketGateway extends EventEmitter {
   /**
    * 处理心跳回执
    */
-  handleHeartbeatAck() {
+  handleHeartbeatAck(): void {
     this.emit('debug', 'Heartbeat ACK received');
   }
 
   /**
    * 处理重连
    */
-  handleReconnect() {
+  handleReconnect(): void {
     this.emit('reconnect');
     this.reconnect();
   }
 
   /**
    * 处理无效Session
-   * @param {Object} payload - 消息内容
+   * @param {Payload} payload - 消息内容
    */
-  handleInvalidSession(payload) {
+  handleInvalidSession(payload: Payload): void {
     if (payload.d) {
       // 可以恢复
       this.resume();
@@ -195,7 +225,7 @@ class WebSocketGateway extends EventEmitter {
    * @param {number} code - 关闭码
    * @param {Buffer} reason - 关闭原因
    */
-  handleClose(code, reason) {
+  handleClose(code: number, reason: Buffer): void {
     this.isConnected = false;
     this.stopHeartbeat();
 
@@ -210,7 +240,7 @@ class WebSocketGateway extends EventEmitter {
   /**
    * 发送鉴权
    */
-  async identify() {
+  async identify(): Promise<void> {
     // 获取token
     let token = this.token;
 
@@ -220,7 +250,7 @@ class WebSocketGateway extends EventEmitter {
         const tokenData = await this.http.getAccessToken();
         token = tokenData.access_token;
       } catch (error) {
-        this.emit('error', new Error('Failed to get access token: ' + error.message));
+        this.emit('error', new Error('Failed to get access token: ' + (error as Error).message));
         return;
       }
     }
@@ -250,7 +280,7 @@ class WebSocketGateway extends EventEmitter {
   /**
    * 恢复连接
    */
-  async resume() {
+  async resume(): Promise<void> {
     // 获取token
     let token = this.token;
 
@@ -260,7 +290,7 @@ class WebSocketGateway extends EventEmitter {
         const tokenData = await this.http.getAccessToken();
         token = tokenData.access_token;
       } catch (error) {
-        this.emit('error', new Error('Failed to get access token: ' + error.message));
+        this.emit('error', new Error('Failed to get access token: ' + (error as Error).message));
         return;
       }
     }
@@ -286,7 +316,7 @@ class WebSocketGateway extends EventEmitter {
    * 开始心跳
    * @param {number} interval - 心跳间隔（毫秒）
    */
-  startHeartbeat(interval) {
+  startHeartbeat(interval: number): void {
     this.stopHeartbeat();
 
     this.heartbeatInterval = setInterval(() => {
@@ -297,7 +327,7 @@ class WebSocketGateway extends EventEmitter {
   /**
    * 停止心跳
    */
-  stopHeartbeat() {
+  stopHeartbeat(): void {
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval);
       this.heartbeatInterval = null;
@@ -307,7 +337,7 @@ class WebSocketGateway extends EventEmitter {
   /**
    * 发送心跳
    */
-  sendHeartbeat() {
+  sendHeartbeat(): void {
     const payload = {
       op: OpCode.HEARTBEAT,
       d: this.seq,
@@ -319,7 +349,7 @@ class WebSocketGateway extends EventEmitter {
   /**
    * 重连
    */
-  async reconnect() {
+  async reconnect(): Promise<void> {
     if (this.isReconnecting) {
       return;
     }
@@ -337,7 +367,7 @@ class WebSocketGateway extends EventEmitter {
         this.emit('reconnecting');
 
         // 获取新的gateway地址
-        const gatewayUrl = await this.getGateway();
+        const gatewayUrl = this.getGateway ? await this.getGateway() : this.url;
         await this.connect(gatewayUrl);
 
         this.isReconnecting = false;
@@ -353,9 +383,9 @@ class WebSocketGateway extends EventEmitter {
 
   /**
    * 发送消息
-   * @param {Object} payload - 消息内容
+   * @param {Payload} payload - 消息内容
    */
-  send(payload) {
+  send(payload: Payload): void {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(payload));
     }
@@ -364,7 +394,7 @@ class WebSocketGateway extends EventEmitter {
   /**
    * 关闭连接
    */
-  close() {
+  close(): void {
     this.stopHeartbeat();
 
     if (this.reconnectTimeout) {

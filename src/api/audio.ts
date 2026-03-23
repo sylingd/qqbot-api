@@ -3,10 +3,13 @@
  * 基于腾讯官方文档：https://bot.q.qq.com/wiki/develop/api-v2/server-inter/audio/
  */
 
-import { AudioControl, AudioStatus  } from '../types/index.js';
+import { AudioControl, AudioStatus } from '../types/index';
+import QQBotHttpClient from '../core/httpClient';
 
 class AudioAPI {
-  constructor(httpClient) {
+  private httpClient: QQBotHttpClient;
+
+  constructor(httpClient: QQBotHttpClient) {
     this.httpClient = httpClient;
   }
 
@@ -19,7 +22,7 @@ class AudioAPI {
    * @param {number} options.status - 播放状态
    * @returns {Promise<void>}
    */
-  async controlAudio(channelId, options) {
+  async controlAudio(channelId: string, options: { audio_url?: string; text?: string; status: number }): Promise<void> {
     await this.httpClient.post(`/channels/${channelId}/audio`, options);
   }
 
@@ -30,7 +33,7 @@ class AudioAPI {
    * @param {string} text - 状态文本
    * @returns {Promise<void>}
    */
-  async startAudio(channelId, audioUrl, text = '') {
+  async startAudio(channelId: string, audioUrl: string, text = ''): Promise<void> {
     await this.controlAudio(channelId, {
       audio_url: audioUrl,
       text,
@@ -44,7 +47,7 @@ class AudioAPI {
    * @param {string} text - 状态文本
    * @returns {Promise<void>}
    */
-  async pauseAudio(channelId, text = '') {
+  async pauseAudio(channelId: string, text = ''): Promise<void> {
     await this.controlAudio(channelId, {
       text,
       status: AudioStatus.PAUSE,
@@ -57,7 +60,7 @@ class AudioAPI {
    * @param {string} text - 状态文本
    * @returns {Promise<void>}
    */
-  async resumeAudio(channelId, text = '') {
+  async resumeAudio(channelId: string, text = ''): Promise<void> {
     await this.controlAudio(channelId, {
       text,
       status: AudioStatus.RESUME,
@@ -70,7 +73,7 @@ class AudioAPI {
    * @param {string} text - 状态文本
    * @returns {Promise<void>}
    */
-  async stopAudio(channelId, text = '') {
+  async stopAudio(channelId: string, text = ''): Promise<void> {
     await this.controlAudio(channelId, {
       text,
       status: AudioStatus.STOP,
@@ -82,7 +85,7 @@ class AudioAPI {
    * @param {string} channelId - 子频道ID
    * @returns {Promise<Object>} 麦克风列表
    */
-  async getMicList(channelId) {
+  async getMicList(channelId: string): Promise<any> {
     const data = await this.httpClient.get(`/channels/${channelId}/mic`);
     return data;
   }
@@ -92,7 +95,7 @@ class AudioAPI {
    * @param {string} channelId - 子频道ID
    * @returns {Promise<void>}
    */
-  async onMic(channelId) {
+  async onMic(channelId: string): Promise<void> {
     await this.httpClient.put(`/channels/${channelId}/mic`);
   }
 
@@ -101,7 +104,7 @@ class AudioAPI {
    * @param {string} channelId - 子频道ID
    * @returns {Promise<void>}
    */
-  async offMic(channelId) {
+  async offMic(channelId: string): Promise<void> {
     await this.httpClient.delete(`/channels/${channelId}/mic`);
   }
 }

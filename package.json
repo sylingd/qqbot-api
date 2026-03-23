@@ -1,34 +1,14 @@
 {
-  "name": "qqbot-api",
-  "version": "1.0.5",
+  "name": "@sylingd/qqbot-api",
+  "version": "1.0.0",
   "description": "腾讯QQ Bot API Node.js SDK - 完整封装52个API端点，支持ES Module",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.js",
   "type": "module",
-  "exports": {
-    ".": {
-      "import": "./index.js",
-      "types": "./index.d.ts",
-      "default": "./index.js"
-    },
-    "./types": {
-      "import": "./src/types/index.js",
-      "types": "./index.d.ts",
-      "default": "./src/types/index.js"
-    },
-    "./core": {
-      "import": "./src/core/index.js",
-      "types": "./index.d.ts",
-      "default": "./src/core/index.js"
-    },
-    "./api": {
-      "import": "./src/api/index.js",
-      "types": "./index.d.ts",
-      "default": "./src/api/index.js"
-    }
-  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "rslib build",
+    "build:watch": "rslib build --watch",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "qqbot",
@@ -40,14 +20,11 @@
     "qqbot-api",
     "typescript"
   ],
-  "author": "wfqyys",
+  "author": "ShuangYa",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/wfqyys/qqbot-api.git"
-  },
-  "bugs": {
-    "url": ""
+    "url": "https://github.com/sylingd/qqbot-api.git"
   },
   "homepage": "",
   "dependencies": {
@@ -55,17 +32,16 @@
     "ws": "^8.14.0"
   },
   "devDependencies": {
+    "@rslib/core": "^0.20.0",
     "@types/node": "^20.0.0",
     "@types/ws": "^8.5.0",
     "typescript": "^5.0.0"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=18.0.0"
   },
   "files": [
-    "index.js",
-    "index.d.ts",
-    "src/**/*",
+    "dist/**/*",
     "README.md",
     "LICENSE"
   ]

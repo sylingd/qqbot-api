@@ -9,7 +9,7 @@
 export const ErrorCode = {
   // 通用错误码
   UNKNOWN: 0, // 未知错误
-  SUCCESS: 0, // 成功
+  SUCCESS: 1, // 成功
 
   // 参数错误
   PARAM_ERROR: 1001, // 参数错误
@@ -29,6 +29,8 @@ export const ErrorCode = {
   GUILD_NOT_FOUND: 11302, // 频道不存在
   GUILD_MEMBER_NOT_FOUND: 11303, // 成员不存在
   GUILD_ROLE_NOT_FOUND: 11304, // 身份组不存在
+  UIN_NOT_FOUND: 11306, // UIN未找到
+  BOT_NOT_IN_GUILD: 11305, // 机器人不在频道中
 
   // 子频道相关错误
   CHANNEL_NOT_FOUND: 11404, // 子频道不存在
@@ -47,16 +49,16 @@ export const ErrorCode = {
   INTERNAL_ERROR: 14000, // 内部错误
   SERVICE_UNAVAILABLE: 14001, // 服务不可用
   DATABASE_ERROR: 14002, // 数据库错误
+} as const;
 
-  // 其他错误
-  UIN_NOT_FOUND: 11302, // UIN未找到
-  BOT_NOT_IN_GUILD: 11305, // 机器人不在频道中
-};
+// 获取ErrorCode的所有键值对类型
+export type ErrorCodeKey = keyof typeof ErrorCode;
+export type ErrorCodeValue = typeof ErrorCode[keyof typeof ErrorCode];
 
 /**
  * 错误码描述
  */
-export const ErrorMessages = {
+export const ErrorMessages: Record<ErrorCodeValue, string> = {
   [ErrorCode.UNKNOWN]: '未知错误',
   [ErrorCode.SUCCESS]: '成功',
   [ErrorCode.PARAM_ERROR]: '参数错误',
@@ -84,23 +86,35 @@ export const ErrorMessages = {
   [ErrorCode.BOT_NOT_IN_GUILD]: '机器人不在频道中',
 };
 
+// 定义错误数据接口
+export interface IErrorData {
+  [key: string]: any;
+}
+
 /**
  * QQ Bot API错误类
  */
 export class QQBotError extends Error {
-  constructor(code, message, data = null) {
+  public readonly code: ErrorCodeValue;
+  public readonly data: IErrorData | null;
+  public readonly timestamp: number;
+
+  constructor(code: ErrorCodeValue, message?: string, data: IErrorData | null = null) {
     super(message || ErrorMessages[code] || '未知错误');
     this.name = 'QQBotError';
     this.code = code;
     this.data = data;
     this.timestamp = Date.now();
+
+    // 维护原型链
+    Object.setPrototypeOf(this, QQBotError.prototype);
   }
 
   /**
    * 获取错误描述
    * @returns {string} 错误描述
    */
-  getDescription() {
+  getDescription(): string {
     return `[${this.code}] ${this.message}`;
   }
 
@@ -108,7 +122,7 @@ export class QQBotError extends Error {
    * 转换为JSON
    * @returns {Object} JSON对象
    */
-  toJSON() {
+  toJSON(): { name: string; code: number; message: string; data: IErrorData | null; timestamp: number } {
     return {
       name: this.name,
       code: this.code,
@@ -120,59 +134,63 @@ export class QQBotError extends Error {
 
   /**
    * 判断是否为特定错误码
-   * @param {number} code - 错误码
+   * @param {ErrorCodeValue} code - 错误码
    * @returns {boolean} 是否匹配
    */
-  is(code) {
+  is(code: ErrorCodeValue): boolean {
     return this.code === code;
   }
 
   /**
-   * 判断是否为Token错误
-   * @returns {boolean} 是否为Token错误
+   * 判断是否为 Token 错误
+   * @returns {boolean} 是否为 Token 错误
    */
-  isTokenError() {
-    return [
+  isTokenError(): boolean {
+    const tokenErrorCodes: ErrorCodeValue[] = [
       ErrorCode.TOKEN_ERROR,
       ErrorCode.TOKEN_EXPIRED,
       ErrorCode.TOKEN_INVALID,
-    ].includes(this.code);
+    ];
+    return tokenErrorCodes.includes(this.code);
   }
 
   /**
    * 判断是否为权限错误
    * @returns {boolean} 是否为权限错误
    */
-  isPermissionError() {
-    return [
+  isPermissionError(): boolean {
+    const permissionErrorCodes: ErrorCodeValue[] = [
       ErrorCode.NO_PERMISSION,
       ErrorCode.PERMISSION_DENIED,
-    ].includes(this.code);
+    ];
+    return permissionErrorCodes.includes(this.code);
   }
 
   /**
    * 判断是否为频率限制错误
    * @returns {boolean} 是否为频率限制错误
    */
-  isRateLimitError() {
-    return [
+  isRateLimitError(): boolean {
+    const rateLimitErrorCodes: ErrorCodeValue[] = [
       ErrorCode.RATE_LIMIT,
       ErrorCode.RATE_LIMIT_EXCEEDED,
-    ].includes(this.code);
+    ];
+    return rateLimitErrorCodes.includes(this.code);
   }
 
   /**
    * 判断是否为资源不存在错误
    * @returns {boolean} 是否为资源不存在错误
    */
-  isNotFoundError() {
-    return [
+  isNotFoundError(): boolean {
+    const notFoundErrorCodes: ErrorCodeValue[] = [
       ErrorCode.GUILD_NOT_FOUND,
       ErrorCode.GUILD_MEMBER_NOT_FOUND,
       ErrorCode.GUILD_ROLE_NOT_FOUND,
       ErrorCode.CHANNEL_NOT_FOUND,
       ErrorCode.MESSAGE_NOT_FOUND,
-    ].includes(this.code);
+    ];
+    return notFoundErrorCodes.includes(this.code);
   }
 }
 
@@ -183,7 +201,7 @@ export class QQBotError extends Error {
  * @param {Object} data - 错误数据
  * @returns {QQBotError} 错误对象
  */
-export function createError(code, message, data = null) {
+export function createError(code: ErrorCodeValue, message?: string, data: IErrorData | null = null): QQBotError {
   return new QQBotError(code, message, data);
 }
 
@@ -192,10 +210,10 @@ export function createError(code, message, data = null) {
  * @param {Object} response - API响应
  * @returns {QQBotError} 错误对象
  */
-export function createErrorFromResponse(response) {
-  const code = response.code || ErrorCode.UNKNOWN;
-  const message = response.message || ErrorMessages[code] || '未知错误';
-  return new QQBotError(code, message, response);
+export function createErrorFromResponse(response: { code?: number; message?: string; [key: string]: any }): QQBotError {
+  const code = response.code !== undefined ? response.code : ErrorCode.UNKNOWN;
+  const message = response.message || ErrorMessages[code as ErrorCodeValue] || '未知错误';
+  return new QQBotError(code as ErrorCodeValue, message, response);
 }
 
 export default {

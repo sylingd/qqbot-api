@@ -3,10 +3,13 @@
  * 基于腾讯官方文档：https://bot.q.qq.com/wiki/develop/api-v2/server-inter/permission/
  */
 
-import { Role, APIPermission, APIPermissionDemand  } from '../types/index.js';
+import { Role, APIPermission } from '../types/index';
+import QQBotHttpClient from '../core/httpClient';
 
 class PermissionAPI {
-  constructor(httpClient) {
+  private httpClient: QQBotHttpClient;
+
+  constructor(httpClient: QQBotHttpClient) {
     this.httpClient = httpClient;
   }
 
@@ -15,9 +18,9 @@ class PermissionAPI {
    * @param {string} guildId - 频道ID
    * @returns {Promise<Role[]>} 身份组列表
    */
-  async getRoles(guildId) {
+  async getRoles(guildId: string): Promise<Role[]> {
     const data = await this.httpClient.get(`/guilds/${guildId}/roles`);
-    return data.roles.map(role => new Role(role));
+    return data.roles;
   }
 
   /**
@@ -29,9 +32,12 @@ class PermissionAPI {
    * @param {boolean} options.hoist - 是否在成员列表中单独展示
    * @returns {Promise<Role>} 创建的身份组
    */
-  async createRole(guildId, options) {
+  async createRole(
+    guildId: string,
+    options: { name: string; color?: number; hoist?: boolean }
+  ): Promise<Role> {
     const data = await this.httpClient.post(`/guilds/${guildId}/roles`, options);
-    return new Role(data.role);
+    return data.role;
   }
 
   /**
@@ -44,9 +50,13 @@ class PermissionAPI {
    * @param {boolean} options.hoist - 是否在成员列表中单独展示
    * @returns {Promise<Role>} 修改后的身份组
    */
-  async updateRole(guildId, roleId, options) {
+  async updateRole(
+    guildId: string,
+    roleId: string,
+    options: { name?: string; color?: number; hoist?: boolean }
+  ): Promise<Role> {
     const data = await this.httpClient.patch(`/guilds/${guildId}/roles/${roleId}`, options);
-    return new Role(data.role);
+    return data.role;
   }
 
   /**
@@ -55,7 +65,7 @@ class PermissionAPI {
    * @param {string} roleId - 身份组ID
    * @returns {Promise<void>}
    */
-  async deleteRole(guildId, roleId) {
+  async deleteRole(guildId: string, roleId: string): Promise<void> {
     await this.httpClient.delete(`/guilds/${guildId}/roles/${roleId}`);
   }
 
@@ -67,7 +77,7 @@ class PermissionAPI {
    * @param {string} channelId - 子频道ID（可选）
    * @returns {Promise<void>}
    */
-  async addRoleMember(guildId, roleId, userId, channelId = null) {
+  async addRoleMember(guildId: string, roleId: string, userId: string, channelId: string | null = null): Promise<void> {
     const url = channelId
       ? `/guilds/${guildId}/members/${userId}/roles/${roleId}?channel_id=${channelId}`
       : `/guilds/${guildId}/members/${userId}/roles/${roleId}`;
@@ -83,7 +93,7 @@ class PermissionAPI {
    * @param {string} channelId - 子频道ID（可选）
    * @returns {Promise<void>}
    */
-  async deleteRoleMember(guildId, roleId, userId, channelId = null) {
+  async deleteRoleMember(guildId: string, roleId: string, userId: string, channelId: string | null = null): Promise<void> {
     const url = channelId
       ? `/guilds/${guildId}/members/${userId}/roles/${roleId}?channel_id=${channelId}`
       : `/guilds/${guildId}/members/${userId}/roles/${roleId}`;
@@ -97,7 +107,7 @@ class PermissionAPI {
    * @param {string} userId - 用户ID
    * @returns {Promise<Object>} 权限信息
    */
-  async getChannelPermissions(channelId, userId) {
+  async getChannelPermissions(channelId: string, userId: string): Promise<any> {
     const data = await this.httpClient.get(`/channels/${channelId}/members/${userId}/permissions`);
     return data;
   }
@@ -111,7 +121,11 @@ class PermissionAPI {
    * @param {string} options.remove - 移除的权限值
    * @returns {Promise<void>}
    */
-  async updateChannelPermissions(channelId, userId, options) {
+  async updateChannelPermissions(
+    channelId: string,
+    userId: string,
+    options: { add?: string; remove?: string }
+  ): Promise<void> {
     await this.httpClient.put(`/channels/${channelId}/members/${userId}/permissions`, options);
   }
 
@@ -121,7 +135,7 @@ class PermissionAPI {
    * @param {string} roleId - 身份组ID
    * @returns {Promise<Object>} 权限信息
    */
-  async getChannelRolePermissions(channelId, roleId) {
+  async getChannelRolePermissions(channelId: string, roleId: string): Promise<any> {
     const data = await this.httpClient.get(`/channels/${channelId}/roles/${roleId}/permissions`);
     return data;
   }
@@ -135,7 +149,11 @@ class PermissionAPI {
    * @param {string} options.remove - 移除的权限值
    * @returns {Promise<void>}
    */
-  async updateChannelRolePermissions(channelId, roleId, options) {
+  async updateChannelRolePermissions(
+    channelId: string,
+    roleId: string,
+    options: { add?: string; remove?: string }
+  ): Promise<void> {
     await this.httpClient.put(`/channels/${channelId}/roles/${roleId}/permissions`, options);
   }
 
@@ -144,9 +162,9 @@ class PermissionAPI {
    * @param {string} guildId - 频道ID
    * @returns {Promise<APIPermission[]>} API权限列表
    */
-  async getAPIPermissions(guildId) {
+  async getAPIPermissions(guildId: string): Promise<APIPermission[]> {
     const data = await this.httpClient.get(`/guilds/${guildId}/api_permission`);
-    return data.apis.map(api => new APIPermission(api));
+    return data.apis;
   }
 
   /**
@@ -159,7 +177,11 @@ class PermissionAPI {
    * @param {string} options.desc - 申请描述
    * @returns {Promise<Object>} 申请结果
    */
-  async requireAPIPermission(guildId, channelId, options) {
+  async requireAPIPermission(
+    guildId: string,
+    channelId: string,
+    options: { path: string; method: string; desc: string }
+  ): Promise<any> {
     const data = await this.httpClient.post(`/guilds/${guildId}/api_permission/demand`, {
       channel_id: channelId,
       ...options,

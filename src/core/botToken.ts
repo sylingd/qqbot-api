@@ -5,28 +5,40 @@
 
 import axios from 'axios';
 
+interface TokenResponse {
+  access_token: string;
+  expires_in: number;
+}
+
 /**
  * Bot Token管理器
  */
 class BotTokenManager {
+  private appId: string | undefined;
+  private clientSecret: string | undefined;
+  private botToken: string | null = null;
+  private botTokenExpireTime: number = 0;
+
   /**
    * 构造函数
-   * @param {Object} config - 配置对象
-   * @param {string} config.appId - 机器人AppID
-   * @param {string} config.clientSecret - 机器人ClientSecret
+   * @param appId - 机器人AppID
+   * @param token - 已有的token
+   * @param clientSecret - 机器人ClientSecret
    */
-  constructor(config = {}) {
-    this.appId = config.appId;
-    this.clientSecret = config.clientSecret;
-    this.botToken = null;
-    this.botTokenExpireTime = 0;
+  constructor(appId?: string, token?: string, clientSecret?: string) {
+    this.appId = appId;
+    // 如果提供了token，则直接使用
+    if (token) {
+      this.botToken = token;
+    }
+    this.clientSecret = clientSecret;
   }
 
   /**
    * 获取Bot Token
-   * @returns {Promise<Object>} Token信息
+   * @returns {Promise<TokenResponse>} Token信息
    */
-  async getBotToken() {
+  async getBotToken(): Promise<TokenResponse> {
     if (!this.appId || !this.clientSecret) {
       throw new Error('appId and clientSecret are required to get bot token');
     }
@@ -49,11 +61,11 @@ class BotTokenManager {
       this.botTokenExpireTime = Date.now() + (response.data.expires_in - 60) * 1000; // 提前60秒过期
 
       return {
-        access_token: this.botToken,
+        access_token: this.botToken!,
         expires_in: response.data.expires_in,
       };
     } catch (error) {
-      throw new Error(`Failed to get bot token: ${error.message}`);
+      throw new Error(`Failed to get bot token: ${(error as Error).message}`);
     }
   }
 
@@ -61,11 +73,11 @@ class BotTokenManager {
    * 检查并刷新Bot Token
    * @returns {Promise<string>} Bot Token
    */
-  async checkAndRefreshToken() {
+  async checkAndRefreshToken(): Promise<string> {
     if (!this.botToken || Date.now() >= this.botTokenExpireTime) {
       await this.getBotToken();
     }
-    return this.botToken;
+    return this.botToken!;
   }
 
   /**
@@ -73,7 +85,7 @@ class BotTokenManager {
    * 格式：Bot {appid}.{token}
    * @returns {Promise<string>} 完整的Bot Token
    */
-  async getFullBotToken() {
+  async getToken(): Promise<string> {
     const token = await this.checkAndRefreshToken();
     return `Bot ${this.appId}.${token}`;
   }
@@ -81,7 +93,7 @@ class BotTokenManager {
   /**
    * 清除Token缓存
    */
-  clearToken() {
+  clearToken(): void {
     this.botToken = null;
     this.botTokenExpireTime = 0;
   }
