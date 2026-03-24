@@ -369,6 +369,7 @@ export enum InnerEventType {
   RECONNECTING = 'RECONNECTING', // 正在重连
   DEBUG = 'DEBUG', // 调试信息
   HEARTBEAT_ACK = 'HEARTBEAT_ACK', // 心跳确认
+  READY_OR_RESUMED = 'READY_OR_RESUMED',
 }
 
 /**

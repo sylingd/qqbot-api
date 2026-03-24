@@ -100,7 +100,7 @@ class WebSocketGateway extends EventEmitter {
         });
 
         // 等待READY事件
-        this.once(EventType.READY, () => {
+        this.once(InnerEventType.READY_OR_RESUMED, () => {
           resolve();
         });
       } catch (error) {
@@ -179,8 +179,10 @@ class WebSocketGateway extends EventEmitter {
     if (eventType === EventType.READY) {
       this.sessionId = eventData.session_id;
       this.emit(EventType.READY, eventData);
+      this.emit(InnerEventType.READY_OR_RESUMED);
     } else if (eventType === EventType.RESUMED) {
       this.emit(EventType.RESUMED, eventData);
+      this.emit(InnerEventType.READY_OR_RESUMED);
     } else if (eventType) {
       this.emit(eventType, eventData);
     }
