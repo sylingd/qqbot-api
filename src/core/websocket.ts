@@ -23,7 +23,7 @@ interface Payload {
 }
 
 interface QQBotWebSocket extends WebSocket {
-  status?: 'CONNECTED' | 'HELLOED';
+  bizStatus?: 'INIT' | 'CONNECTED' | 'HELLOED';
 }
 
 /**
@@ -86,6 +86,7 @@ class WebSocketGateway extends EventEmitter {
     return new Promise((resolve, reject) => {
       try {
         const ws = new WebSocket(gatewayUrl);
+        (ws as QQBotWebSocket).bizStatus = 'INIT';
 
         ws.on('open', () => {
           this.emit(InnerEventType.CONNECTED, ws);
@@ -107,8 +108,7 @@ class WebSocketGateway extends EventEmitter {
         this.ws = ws;
 
         setTimeout(() => {
-          const { status } = ws as QQBotWebSocket;
-          if (!status) {
+          if ((ws as QQBotWebSocket).bizStatus === 'INIT') {
             this.emit(InnerEventType.DEBUG, 'Long time to connect');
           }
           ws.close();
@@ -141,7 +141,7 @@ class WebSocketGateway extends EventEmitter {
       // 根据OpCode处理
       switch (payload.op) {
         case OpCode.HELLO:
-          ws.status = 'HELLOED';
+          ws.bizStatus = 'HELLOED';
           this.handleHello(payload);
           break;
 
@@ -195,12 +195,12 @@ class WebSocketGateway extends EventEmitter {
 
     // 保存session_id
     if (eventType === EventType.READY) {
-      ws.status = 'CONNECTED';
+      ws.bizStatus = 'CONNECTED';
       this.sessionId = eventData.session_id;
       this.emit(EventType.READY, eventData);
       this.emit(InnerEventType.READY_OR_RESUMED);
     } else if (eventType === EventType.RESUMED) {
-      ws.status = 'CONNECTED';
+      ws.bizStatus = 'CONNECTED';
       this.emit(EventType.RESUMED, eventData);
       this.emit(InnerEventType.READY_OR_RESUMED);
     } else if (eventType) {
