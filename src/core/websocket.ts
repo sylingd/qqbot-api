@@ -22,6 +22,10 @@ interface Payload {
   t?: string;
 }
 
+interface QQBotWebSocket extends WebSocket {
+  status?: 'CONNECTED' | 'HELLOED';
+}
+
 /**
  * WebSocket Gateway客户端
  */
@@ -30,12 +34,13 @@ class WebSocketGateway extends EventEmitter {
   private intents: number;
   private shard: number[];
   private getGateway: () => Promise<string>;
-  private ws: WebSocket | null = null;
+  private ws: QQBotWebSocket | null = null;
   private sessionId: string | null = null;
   private seq: number = 0;
   private heartbeatInterval: NodeJS.Timeout | null = null;
   private reconnectTimeout: NodeJS.Timeout | null = null;
   private isReconnecting: boolean = false;
+  private lastSessionType: 'IDENTIFY' | 'RESUME' = 'IDENTIFY';
 
   /**
    * 构造函数
@@ -80,29 +85,40 @@ class WebSocketGateway extends EventEmitter {
 
     return new Promise((resolve, reject) => {
       try {
-        this.ws = new WebSocket(gatewayUrl);
+        const ws = new WebSocket(gatewayUrl);
 
-        this.ws!.on('open', () => {
-          this.emit(InnerEventType.CONNECTED);
+        ws.on('open', () => {
+          this.emit(InnerEventType.CONNECTED, ws);
         });
 
-        this.ws!.on('message', data => {
-          this.handleMessage(data);
+        ws.on('message', data => {
+          this.handleMessage(ws, data);
         });
 
-        this.ws!.on('close', (code: number, reason: Buffer) => {
-          this.handleClose(code, reason);
+        ws.on('close', (code: number, reason: Buffer) => {
+          this.handleClose(ws, code, reason);
         });
 
-        this.ws!.on('error', (error: Error) => {
-          this.emit(EventType.ERROR, error);
+        ws.on('error', (error: Error) => {
+          this.emit(EventType.ERROR, error, ws);
           reject(error);
         });
 
+        this.ws = ws;
+
+        setTimeout(() => {
+          const { status } = ws as QQBotWebSocket;
+          if (!status) {
+            this.emit(InnerEventType.DEBUG, 'Long time to connect');
+          }
+          ws.close();
+          this.removeListener(InnerEventType.READY_OR_RESUMED, resolve);
+          this.isReconnecting = false;
+          this.reconnect();
+        }, 5000);
+
         // 等待READY事件
-        this.once(InnerEventType.READY_OR_RESUMED, () => {
-          resolve();
-        });
+        this.once(InnerEventType.READY_OR_RESUMED, resolve);
       } catch (error) {
         reject(error);
       }
@@ -113,7 +129,7 @@ class WebSocketGateway extends EventEmitter {
    * 处理消息
    * @param {Buffer} data - 消息数据
    */
-  handleMessage(data: WebSocket.Data): void {
+  handleMessage(ws: QQBotWebSocket, data: WebSocket.Data): void {
     try {
       const payload: Payload = JSON.parse(data.toString());
 
@@ -125,11 +141,12 @@ class WebSocketGateway extends EventEmitter {
       // 根据OpCode处理
       switch (payload.op) {
         case OpCode.HELLO:
+          ws.status = 'HELLOED';
           this.handleHello(payload);
           break;
 
         case OpCode.DISPATCH:
-          this.handleDispatch(payload);
+          this.handleDispatch(ws, payload);
           break;
 
         case OpCode.HEARTBEAT_ACK:
@@ -137,7 +154,8 @@ class WebSocketGateway extends EventEmitter {
           break;
 
         case OpCode.RECONNECT:
-          this.handleReconnect();
+          this.emit(InnerEventType.RECONNECT);
+          this.reconnect();
           break;
 
         case OpCode.INVALID_SESSION:
@@ -172,15 +190,17 @@ class WebSocketGateway extends EventEmitter {
    * 处理Dispatch消息
    * @param {Payload} payload - 消息内容
    */
-  handleDispatch(payload: Payload): void {
+  handleDispatch(ws: QQBotWebSocket, payload: Payload): void {
     const { t: eventType, d: eventData } = payload;
 
     // 保存session_id
     if (eventType === EventType.READY) {
+      ws.status = 'CONNECTED';
       this.sessionId = eventData.session_id;
       this.emit(EventType.READY, eventData);
       this.emit(InnerEventType.READY_OR_RESUMED);
     } else if (eventType === EventType.RESUMED) {
+      ws.status = 'CONNECTED';
       this.emit(EventType.RESUMED, eventData);
       this.emit(InnerEventType.READY_OR_RESUMED);
     } else if (eventType) {
@@ -196,24 +216,16 @@ class WebSocketGateway extends EventEmitter {
   }
 
   /**
-   * 处理重连
-   */
-  handleReconnect(): void {
-    this.emit(InnerEventType.RECONNECT);
-    this.reconnect();
-  }
-
-  /**
    * 处理无效Session
    * @param {Payload} payload - 消息内容
    */
   handleInvalidSession(payload: Payload): void {
-    if (payload.d) {
-      // 可以恢复
+    if (this.lastSessionType === 'RESUME' || !payload.d) {
+      this.sessionId = null;
+    }
+    if (this.sessionId) {
       this.resume();
     } else {
-      // 需要重新鉴权
-      this.sessionId = null;
       this.identify();
     }
   }
@@ -223,11 +235,12 @@ class WebSocketGateway extends EventEmitter {
    * @param {number} code - 关闭码
    * @param {Buffer} reason - 关闭原因
    */
-  handleClose(code: number, reason: Buffer): void {
+  handleClose(ws: WebSocket, code: number, reason: Buffer): void {
     this.stopHeartbeat();
-
     this.emit(EventType.CLOSE, code, reason.toString());
-
+    if (this.ws === ws) {
+      this.isReconnecting = false;
+    }
     // 自动重连
     if (!this.isReconnecting) {
       this.reconnect();
@@ -255,14 +268,10 @@ class WebSocketGateway extends EventEmitter {
         token: `QQBot ${token}`,
         intents: this.intents,
         shard: this.shard,
-        // properties: {
-        //   $os: process.platform,
-        //   $browser: 'qqbot-plugin',
-        //   $device: 'qqbot-plugin',
-        // },
       },
     };
 
+    this.lastSessionType = 'IDENTIFY';
     this.send(payload);
   }
 
@@ -287,6 +296,7 @@ class WebSocketGateway extends EventEmitter {
       },
     };
 
+    this.lastSessionType = 'RESUME';
     this.send(payload);
   }
 
