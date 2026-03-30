@@ -110,11 +110,11 @@ class WebSocketGateway extends EventEmitter {
         setTimeout(() => {
           if ((ws as QQBotWebSocket).bizStatus === 'INIT') {
             this.emit(InnerEventType.DEBUG, 'Long time to connect');
+            ws.close();
+            this.removeListener(InnerEventType.READY_OR_RESUMED, resolve);
+            this.isReconnecting = false;
+            this.reconnect();
           }
-          ws.close();
-          this.removeListener(InnerEventType.READY_OR_RESUMED, resolve);
-          this.isReconnecting = false;
-          this.reconnect();
         }, 5000);
 
         // 等待READY事件
