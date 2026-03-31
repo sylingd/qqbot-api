@@ -59,23 +59,28 @@ const bot = new QQBot({
 ### 2. 监听事件
 
 ```javascript
+import { EventType } from '@sylingd/qqbot-api';
+
 // Bot准备就绪
-bot.on('ready', (data) => {
+bot.on(EventType.READY, (data) => {
   console.log('Bot is ready!');
 });
 
 // 收到消息
-bot.on('MESSAGE_CREATE', async (message) => {
+bot.on(EventType.C2C_MESSAGE_CREATE, async (message) => {
   console.log('收到消息:', message);
 
   // 回复消息
   if (message.content === 'ping') {
-    await bot.message.sendTextMessage(message.channel_id, 'pong!');
+    await bot.message.sendC2CMessage(message.author.user_openid, {
+      msg_type: 0,
+      content: 'pong!',
+    });
   }
 });
 
 // 错误处理
-bot.on('error', (error) => {
+bot.on(EventType.ERROR, (error) => {
   console.error('Bot错误:', error);
 });
 ```
@@ -139,16 +144,34 @@ await bot.channel.updateChannel(channelId, {
 await bot.channel.deleteChannel(channelId);
 ```
 
-### 消息API (Message)
+### 基础消息API (Message)
+
+#### 基础消息操作
+
+```javascript
+// 发送私聊消息
+const message = await bot.message.sendC2CMessage(userOpenId, {
+  msg_type: 0,
+  content: 'Hello World!',
+});
+
+// 发送群聊消息
+const groupMessage = await bot.message.sendGroupMessage(groupOpenid, {
+  msg_type: 0,
+  content: 'Hello World!',
+});
+```
+
+### 频道消息API (ChannelMessage)
 
 #### 基础消息操作
 
 ```javascript
 // 发送文本消息
-const message = await bot.message.sendTextMessage(channelId, 'Hello World!');
+const message = await bot.channelMessage.sendTextMessage(channelId, 'Hello World!');
 
 // 发送Embed消息
-const embedMessage = await bot.message.sendEmbedMessage(channelId, {
+const embedMessage = await bot.channelMessage.sendEmbedMessage(channelId, {
   title: '标题',
   description: '描述',
   color: 0x00FF00,
@@ -158,7 +181,7 @@ const embedMessage = await bot.message.sendEmbedMessage(channelId, {
 });
 
 // 发送Ark消息
-const arkMessage = await bot.message.sendArkMessage(channelId, {
+const arkMessage = await bot.channelMessage.sendArkMessage(channelId, {
   template_id: 1,
   kv: [
     { key: 'title', value: '标题' },
@@ -166,37 +189,37 @@ const arkMessage = await bot.message.sendArkMessage(channelId, {
 });
 
 // 发送Markdown消息
-const markdownMessage = await bot.message.sendMarkdownMessage(channelId, {
+const markdownMessage = await bot.channelMessage.sendMarkdownMessage(channelId, {
   content: '# 标题\n内容',
 });
 
 // 发送图片消息
-const imageMessage = await bot.message.sendImageMessage(channelId, 'https://example.com/image.png');
+const imageMessage = await bot.channelMessage.sendImageMessage(channelId, 'https://example.com/image.png');
 
 // 发送引用消息
-const replyMessage = await bot.message.sendReplyMessage(
+const replyMessage = await bot.channelMessage.sendReplyMessage(
   channelId,
   '回复内容',
   originalMessageId
 );
 
 // 获取消息列表
-const messages = await bot.message.getMessages(channelId, {
+const messages = await bot.channelMessage.getMessages(channelId, {
   limit: 20,
 });
 
 // 获取指定消息
-const message = await bot.message.getMessage(channelId, messageId);
+const message = await bot.channelMessage.getMessage(channelId, messageId);
 
 // 撤回消息
-await bot.message.deleteMessage(channelId, messageId);
+await bot.channelMessage.deleteMessage(channelId, messageId);
 ```
 
 #### 富媒体消息
 
 ```javascript
 // 获取富媒体消息
-const richMedia = await bot.message.getRichMediaMessage(channelId, messageId);
+const richMedia = await bot.channelMessage.getRichMediaMessage(channelId, messageId);
 console.log('附件:', richMedia.attachments);
 console.log('Embeds:', richMedia.embeds);
 ```
@@ -205,7 +228,7 @@ console.log('Embeds:', richMedia.embeds);
 
 ```javascript
 // 设置消息按钮
-await bot.message.setMessageButtons(channelId, messageId, {
+await bot.channelMessage.setMessageButtons(channelId, messageId, {
   rows: [
     {
       buttons: [
@@ -220,26 +243,26 @@ await bot.message.setMessageButtons(channelId, messageId, {
 });
 
 // 创建按钮模板
-const template = await bot.message.createButtonTemplate({
+const template = await bot.channelMessage.createButtonTemplate({
   name: '模板名称',
   template: { /* 按钮配置 */ },
 });
 
 // 获取按钮模板列表
-const templates = await bot.message.getButtonTemplates();
+const templates = await bot.channelMessage.getButtonTemplates();
 
 // 删除按钮模板
-await bot.message.deleteButtonTemplate(templateId);
+await bot.channelMessage.deleteButtonTemplate(templateId);
 ```
 
 #### 私信功能
 
 ```javascript
 // 创建私信会话
-const dms = await bot.message.createDMS(recipientId, sourceGuildId);
+const dms = await bot.channelMessage.createDMS(recipientId, sourceGuildId);
 
 // 发送私信
-await bot.message.sendDMS(dms.guild_id, {
+await bot.channelMessage.sendDMS(dms.guild_id, {
   content: '私信内容',
 });
 ```
@@ -462,7 +485,7 @@ console.log('Session限制:', gatewayBot.session_start_limit);
 ### 使用QQBotError类
 
 ```javascript
-import { QQBotError, ErrorCode } from 'qqbot-api';
+import { QQBotError, ErrorCode } from '@sylingd/qqbot-api';
 
 try {
   const guild = await bot.guild.getGuild('invalid_id');
@@ -532,18 +555,21 @@ SDK支持以下事件类型：
 SDK支持以下Intent类型：
 
 ```javascript
-import { Intent } from 'qqbot-api';
+import { Intent } from '@sylingd/qqbot-api';
 
-Intent.GUILDS                    // 频道事件
-Intent.GUILD_MEMBERS             // 成员事件
-Intent.GUILD_MESSAGES            // 消息事件
-Intent.GUILD_MESSAGE_REACTIONS   // 消息反应事件
-Intent.DIRECT_MESSAGE            // 私信事件
-Intent.OPEN_FORUMS_EVENT         // 论坛事件
+Intent.GUILDS // 频道事件
+Intent.GUILD_MEMBERS // 成员事件
+Intent.GUILD_MESSAGES // 消息事件
+Intent.GUILD_MESSAGE_REACTIONS // 消息反应事件
+Intent.DIRECT_MESSAGE // 私信事件
+Intent.OPEN_FORUMS_EVENT // 论坛事件
 Intent.AUDIO_OR_LIVE_CHANNEL_MEMBER // 音频/直播成员事件
-Intent.INTERACTION               // 互动事件
-Intent.MESSAGE_AUDIT             // 消息审核事件
-Intent.FORUM_EVENT               // 论坛事件
+Intent.GROUP_AND_C2C_EVENT // 单聊群聊事件
+Intent.INTERACTION // 互动事件
+Intent.MESSAGE_AUDIT // 消息审核事件
+Intent.FORUM_EVENT // 论坛事件
+Intent.AUDIO_ACTION // 音频事件
+Intent.PUBLIC_GUILD_MESSAGES // 公域的消息事件
 ```
 
 ## 配置选项
@@ -574,15 +600,6 @@ Authorization: QQBot {ACCESS_TOKEN}
 - ✅ 自动刷新Token（过期前60秒）
 - ✅ Token缓存机制
 - ✅ 失败自动重试
-
-## 项目统计
-
-- **API端点**: 52个
-- **API方法**: 70个
-- **API模块**: 12个
-- **核心模块**: 4个
-- **错误码定义**: 20+个
-- **类型定义**: 50+个
 
 ## 示例
 
